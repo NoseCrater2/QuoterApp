@@ -17,12 +17,6 @@
       </q-toolbar>
     </q-header>
 
-    <q-footer>
-      <q-tabs v-model="tab" class="text-white">
-        <q-route-tab icon="calculate" to="/" label="Cotizador"></q-route-tab>
-      </q-tabs>
-    </q-footer>
-
     <q-drawer
       v-model="leftDrawerOpen"
       show-if-above
