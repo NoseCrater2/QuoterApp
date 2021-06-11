@@ -14,6 +14,7 @@
         <q-toolbar-title class="absolute-center">
           Cotizador
         </q-toolbar-title>
+          <q-img class="absolute-right" src="white-r.png" style="width: 49px; height: 49px;"></q-img>
       </q-toolbar>
     </q-header>
 

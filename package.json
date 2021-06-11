@@ -1,8 +1,8 @@
 {
   "name": "quoterapp",
   "version": "0.0.1",
-  "description": "A Quasar Framework app",
-  "productName": "Quasar App",
+  "description": "Cotizador de persianas",
+  "productName": "Rollux Cotizador",
   "author": "Angel <anarqueabrn@gmail.com>",
   "private": true,
   "scripts": {
@@ -13,6 +13,7 @@
     "@quasar/extras": "^1.0.0",
     "axios": "^0.21.1",
     "core-js": "^3.6.5",
+    "joi": "^17.4.0",
     "quasar": "^1.0.0"
   },
   "devDependencies": {

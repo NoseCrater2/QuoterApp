@@ -4,7 +4,22 @@ const orders = {
   },
 
   getters: {
-
+    totalPrice (state) {
+      let prices = 0
+      if (state.orders.length > 0) {
+        state.orders.map(function (order) {
+          let pt = parseFloat(order.price)
+          // parseFloat(order.motor.price) +
+          // parseFloat(order.motor.flexiballetPrice) +
+          // parseFloat(order.motor.galleryPrice) +
+          // parseFloat(order.motor.manufacturerPrice) +
+          // parseFloat(order.motor.stringPrice)
+          pt = prices += pt
+          return pt
+        })
+      }
+      return prices
+    }
   },
 
   mutations: {

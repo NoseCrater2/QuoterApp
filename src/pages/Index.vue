@@ -1,141 +1,258 @@
 <template>
-  <q-page class="flex flex-start">
-    <q-form @submit="onSubmit" @reset="onReset" ref="form" style="width: 100%; padding: 30px" >
-      <q-select
-      :dense="true"
-      :options-dense="true"
-      rounded
-      outlined
-      option-value="slug"
-      option-label="name"
-      emit-value
-      map-options
-      input-debounce="0"
-      v-model="order.type"
+  <q-page class="flex">
+    <q-stepper
+      v-model="step"
+      vertical
       color="primary"
-      :options="getProduct ? getProduct.types : null"
-      style="width: 100%; padding: 10px 0px"
-      label="Seleccione tipo de persiana"
-      lazy-rules
-      ></q-select>
-      <q-select
-      :dense="true"
-      :options-dense="true"
-      v-if="getType && getType.lines > 0"
-      :rules="[(v) => !!v || 'Requerido']"
-      :options="lines"
-      rounded
-      outlined
-      option-value="slug"
-      option-label="name"
-      v-model="order.line"
-      emit-value
-      map-options
-      input-debounce="0"
-      color="primary"
-      style="width: 100%; padding: 10px 0px"
-      label="Seleccione material"
-      lazy-rules
-      ></q-select>
-      <q-select
-      :rules="[(v) => !!v || 'Requerido']"
-      :options="variants"
-      :dense="true"
-      :options-dense="true"
-      rounded
-      outlined
-      @input="chargeColors"
-      option-value="id"
-      option-label="name"
-      v-model="order.variant"
-      emit-value
-      map-options
-      input-debounce="0"
-      color="primary"
-      style="width: 100%; padding: 10px 0px"
-      label="Seleccione modelo"
-      lazy-rules
-      ></q-select>
-      <q-select
-      :rules="[(v) => !!v || 'Requerido']"
-      :options="colors"
-      :dense="true"
-      :options-dense="true"
-      :disable="disabledSelectColor"
-      :loading="loadingColors"
-      @input="selectColor(order.color)"
-      rounded
-      outlined
-      option-label="color"
-      v-model="order.color"
-      emit-value
-      map-options
-      input-debounce="0"
-      color="primary"
-      style="width: 100%; padding: 10px 0px"
-      label="Seleccione color"
-      lazy-rules
-      ></q-select>
-      <div class="row items-center justify-center">
-        <div class="col">
-          <q-img
-          v-if="order.color != null"
-          :src="`https://test.rollux.com.mx/img/modelos/medium/${order.color.code}.jpg`"
-          style="height: 140px; max-width: 150px"
-          >
+      animated
+      style="width: 100%;"
+    >
+      <q-step
+      :name="1"
+      :title="order.type != null && order.manufacturer != null ?`TIPO: ${order.type.toUpperCase()} y FABRICANTE: ${order.manufacturer}`:'Selecciona tipo y fabricante'"
+      icon="storefront"
+      :done="step > 1"
+      >
+        <q-select
+        behavior="menu"
+        :dense="true"
+        :options-dense="true"
+        rounded
+        outlined
+        option-value="slug"
+        option-label="name"
+        emit-value
+        map-options
+        input-debounce="0"
+        v-model="order.type"
+        color="primary"
+        :options="getProduct ? getProduct.types : null"
+        lazy-rules
+        label="Tipo"
+        style="padding: 10px 0px"
+        ></q-select>
+        <q-select
+        behavior="menu"
+        :dense="true"
+        :options-dense="true"
+        rounded
+        outlined
+        option-value="manufacturer_id"
+        option-label="manufacturer"
+        emit-value
+        map-options
+        input-debounce="0"
+        v-model="order.manufacturer"
+        color="primary"
+        :options="manufacturers"
+        lazy-rules
+        label="Marca"
+        @input="step = 2"
+        ></q-select>
+        <q-stepper-navigation class="flex">
+          <q-space></q-space>
+          <q-btn
+          v-if="order.type != null && order.manufacturer != null"
+          @click="step = 2"
+          color="primary"
+          icon="arrow_downward"
+          flat rounded
+          ></q-btn>
+        </q-stepper-navigation>
+      </q-step>
+      <q-step
+      :name="2"
+      :title="order.variant != null ?`LINEA: ${order.line} MODELO: ${$store.getters.getVariant(order.variant).name}`:'Selecciona modelo'"
+      icon="storefront"
+      :done="step > 2"
+      >
+        <q-select
+        behavior="menu"
+        :dense="true"
+        :options-dense="true"
+        v-if="getType && getType.lines > 0"
+        :options="lines"
+        rounded
+        outlined
+        option-value="slug"
+        option-label="name"
+        v-model="order.line"
+        emit-value
+        map-options
+        input-debounce="0"
+        color="primary"
+        style="padding: 10px 0px"
+        label="Seleccione material"
+        lazy-rules
+        ></q-select>
+        <q-select
+        behavior="menu"
+        :rules="[ val => val || 'Requerido']"
+        :options="variants"
+        :dense="true"
+        :options-dense="true"
+        rounded
+        outlined
+        @input="chargeColors"
+        option-value="id"
+        option-label="name"
+        v-model="order.variant"
+        emit-value
+        map-options
+        input-debounce="0"
+        color="primary"
+        label="Seleccione modelo"
+        lazy-rules
+        ></q-select>
+        <q-stepper-navigation class="flex">
+          <q-btn @click="step = 1" color="primary" icon="arrow_upward" flat rounded></q-btn>
+          <q-space></q-space>
+          <q-btn v-if="order.color != null" @click="step = 3" color="primary" icon="arrow_downward" flat rounded></q-btn>
+        </q-stepper-navigation>
+      </q-step>
+      <q-step
+      :name="3"
+      :title="order.color != null ?`COLOR: ${order.color.color} `:'Selecciona color'"
+      icon="storefront"
+      :done="step > 3"
+      >
+        <q-select
+        behavior="menu"
+        :options="colors"
+        :dense="true"
+        :options-dense="true"
+        :disable="disabledSelectColor"
+        :loading="loadingColors"
+        @input="selectColor(order.color)"
+        rounded
+        outlined
+        option-label="color"
+        v-model="order.color"
+        emit-value
+        map-options
+        input-debounce="0"
+        color="primary"
+        label="Seleccione color"
+        style="padding: 10px 0px"
+        lazy-rules>
+        </q-select>
+        <q-img
+        v-if="order.color != null"
+        :src="`https://rollux.com.mx/img/modelos/medium/${order.type}/${order.manufacturer}/${order.color.code}.jpg`"
+        style="height: 100px; max-width: 100%"
+        >
           <template v-slot:error>
             <q-img
-            :src="`https://test.rollux.com.mx/img/modelos/medium/unavailable.jpg`"
-            style="height: 140px; max-width: 150px"
+            :src="`https://rollux.com.mx/img/modelos/medium-unavailable.jpg`"
+            style="height: 100px; max-width: 100px"
             ></q-img>
           </template>
-          </q-img>
-        </div>
-        <div class="col">
-          <span style="font-size: 1em">3.Seleccione las medidas (El mínimo a cobrar es 1.0 x 1.0)</span>
+        </q-img>
+        <q-stepper-navigation class="flex">
+          <q-btn @click="step = 2" color="primary" icon="arrow_upward" flat rounded></q-btn>
+          <q-space></q-space>
+          <q-btn @click="step = 4" color="primary" icon="arrow_downward" flat rounded></q-btn>
+        </q-stepper-navigation>
+      </q-step>
+      <q-step
+      :name="4"
+      title="Selecciona Medidas"
+      icon="storefront"
+      :done="step > 4"
+      >
+        <q-form ref="sizeform">
           <q-input
+          stack-label
+          dense
+          label-slot
           type="number"
-          :dense="true"
           :disable="disabledSelectSize"
-          :hint="widthMargins"
           v-model="order.canvas[0].width"
           :rules="[
             buttonCanvasRules(maxwidth, 0),
             ...widthCanvasRules(getType ? getType.min_width : 0, maxwidth,0)
           ]"
           rounded
-          outlined
-          label="Ancho">
+          :reactive-rules="true"
+          outlined>
+            <template v-slot:label>
+              <em class="q-px-sm bg-deep-orange-5 text-white rounded-borders">
+                Ancho de {{ widthMargins }} metros
+              </em>
+            </template>
           </q-input>
           <q-input
+          stack-label
+          label-slot
           type="number"
           :dense="true"
           :disable="disabledSelectSize"
-          :hint="heightMargins"
           v-model="order.canvas[0].height"
           :rules="[
             ...heightCanvasRules(getType ? getType.min_height : 0, maxheight,0)
           ]"
           rounded
-          outlined
-          label="Alto">
+          outlined>
+          <template v-slot:label>
+              <em class="q-px-sm bg-deep-orange-5 text-white rounded-borders">
+                Alto de {{ heightMargins }} metros
+              </em>
+            </template>
           </q-input>
-        </div>
-      </div>
-      <q-btn color="black" class="full-width" label="TERMINAR PERSIANA" @click="addBlind()">
-      </q-btn>
-    </q-form>
+        </q-form>
+        <q-stepper-navigation class="flex">
+          <q-btn @click="step = 3" color="primary" icon="arrow_upward" flat rounded></q-btn>
+          <q-space></q-space>
+          <q-btn @click="checkSizes()" color="primary" icon="arrow_downward" flat rounded></q-btn>
+        </q-stepper-navigation>
+      </q-step>
+      <q-step
+      :name="5"
+      :title="order.motor_type != null? `Accionamiento: ${order.motor_type}` : 'Selecciona Accionamiento'"
+      icon="storefront"
+      :done="step > 5"
+      >
+        <q-option-group
+        v-model="order.motor_type"
+        :options="motor_type_options"
+        color="primary"
+        inline
+        ></q-option-group>
+        <q-stepper-navigation class="flex">
+          <q-btn @click="step = 4" color="primary" icon="arrow_upward" flat rounded></q-btn>
+          <q-space></q-space>
+          <q-btn @click="step = 6" color="primary" label="saltar" flat rounded></q-btn>
+        </q-stepper-navigation>
+      </q-step>
+      <q-step
+      :name="6"
+      title="Últimas acciones"
+      icon="storefront"
+      :done="step > 6"
+      >
+        <q-stepper-navigation class="flex justify-center">
+           <q-btn @click="step = 4" color="primary" label="atrás" flat rounded></q-btn>
+          <q-btn label="TERMINAR PERSIANA" @click="addBlind()" color="orange"></q-btn>
+          <!-- <q-btn color="green" label="REALIZAR PEDIDO"></q-btn>
+          <q-btn color="green" outline label="GUARDAR COTIZACIÓN"></q-btn> -->
+        </q-stepper-navigation>
+      </q-step>
+    </q-stepper>
     <q-footer>
       <q-tabs v-model="tab" class="text-white">
-        <div>
-          PERSIANA
-          <div v-if="order.type == 'horizontal-madera-2'" style="color: white; font-size: 1.5em !important;line-height: normal;">
-              ddd
-          </div>
-          <div v-else style="font-size: 1.5em !important;line-height: normal;" >
+        <q-tab>
+           PERSIANA ACTUAL
+          <div style="font-size: 1em !important;line-height: normal;" >
               {{ mxCurrencyFormat.format(unitaryPrice) }} MXN
           </div>
-        </div>
+        </q-tab>
+        <q-route-tab :to="{name:'Quoted'}">
+          <q-badge color="red" floating>{{ $store.state.orders.orders.length }} </q-badge>
+          TOTAL:
+          <div style="font-size: 1em !important;line-height: normal;" >
+              {{mxCurrencyFormat.format($store.getters.totalPrice) }} MXN
+          </div>
+        </q-route-tab>
       </q-tabs>
     </q-footer>
   </q-page>
@@ -146,6 +263,17 @@ import { mapState } from 'vuex'
 export default {
   data () {
     return {
+      motor_type_options: [
+        {
+          label: 'Manual',
+          value: 'Manual'
+        },
+        {
+          label: 'Motorizado',
+          value: 'Motorizado'
+        }
+      ],
+      step: 1,
       tab: null,
       editable: false,
       showButtonDialog: false,
@@ -155,6 +283,7 @@ export default {
       mxCurrencyFormat: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }),
       disabledFrameRadio: true,
       order: {
+        manufacturer: null,
         type: null,
         line: null,
         variant: null,
@@ -163,11 +292,21 @@ export default {
         canvas: [
           { width: null, height: null }
         ],
+        price: 0,
         motor_type: null,
         rotate: false
       },
       defaultOrder: {
+        manufacturer: null,
+        type: null,
+        line: null,
+        variant: null,
         variant2: null,
+        color: null,
+        canvas: [
+          { width: null, height: null }
+        ],
+        price: 0,
         motor_type: null,
         rotate: false
       },
@@ -177,7 +316,15 @@ export default {
   },
   name: 'PageIndex',
   methods: {
+    checkSizes () {
+      this.$refs.sizeform.validate().then(success => {
+        if (success) {
+          this.step = 5
+        }
+      })
+    },
     chargeColors () {
+      this.step = 3
       this.loadingColors = true
       this.disabledSelectColor = true
       this.disabledSelectSize = true
@@ -198,14 +345,12 @@ export default {
       }
     },
     addBlind () {
-      if (this.$refs.form.validate()) {
-        this.$store.dispatch('addToOrder', this.order).then(() => {
-          console.log(this.orders)
-          this.order = Object.assign({}, this.defaultOrder)
-          this.order.canvas = [{ width: null, height: null }]
-          this.$refs.form.resetValidation()
-        })
-      }
+      this.order.price = this.unitaryPrice
+      this.$store.dispatch('addToOrder', this.order).then(() => {
+        this.order = Object.assign({}, this.defaultOrder)
+        this.order.canvas = [{ width: null, height: null }]
+        this.step = 1
+      })
     },
 
     calculateHeightMargins (w) {
@@ -217,13 +362,12 @@ export default {
     },
 
     widthCanvasRules (min, max, index) {
-      const n = parseFloat(this.order.canvas[index].width)
-      return ((!isNaN(n) && n >= min && n <= max) || 'Requerido')
+      // const n = parseFloat(this.order.canvas[index].width)
+      return val => (val && !isNaN(val) && val >= min && val <= max) || 'Requerido'
     },
 
     heightCanvasRules (min, max, index) {
-      const n = parseFloat(this.order.canvas[index].height)
-      return ((!isNaN(n) && n >= min && n <= max) || 'Requerido')
+      return val => (val && !isNaN(val) && val >= min && val <= max) || 'Requerido'
     },
 
     buttonCanvasRules (max, index) {
@@ -243,14 +387,6 @@ export default {
 
     chargeWoodPrices () {
 
-    },
-
-    onSubmit () {
-      console.log('submit')
-    },
-
-    onReset () {
-      console.log('reset')
     }
   },
 
@@ -259,6 +395,14 @@ export default {
       colors: (state) => state.products.relatedColors,
       orders: (state) => state.orders.orders
     }),
+
+    manufacturers () {
+      if (this.order.type) {
+        const m = this.$store.state.products.variants.filter((v) => v.type === this.order.type)
+        return [...new Set(m.map(item => item.manufacturer))]
+      }
+      return null
+    },
 
     getProduct () {
       return this.$store.getters.getTypes('PERSIANAS')
@@ -281,17 +425,14 @@ export default {
     maxheight () {
       if (this.getType && this.variant) {
         if (this.order.rotate) {
-          // this.heightMargins = this.getType.min_height + ' a ' + w
           this.calculateHeightMargins(this.variant.width - 2)
           return (this.variant.width - 0.2)
         }
         if (this.getType.max_height <= 0) {
           this.calculateHeightMargins(this.maxwidth)
-          // this.heightMargins = this.getType.min_height + ' a ' + w
           return this.maxwidth
         } else {
           this.calculateHeightMargins(this.getType.max_height)
-          // this.heightMargins = this.getType.min_height + ' a ' + w
           return this.getType.max_height
         }
       } else {
@@ -303,17 +444,13 @@ export default {
       if (this.getType && this.variant) {
         if (this.order.rotate) {
           this.calculateWidthMargins(this.getType.max_width_rot)
-          // this.widthMargins = this.getType.min_width + ' a ' + w
           return (this.getType.max_width_rot)
         }
         if (this.getType.max_width <= 0) {
           this.calculateWidthMargins(parseFloat(this.variant.width - this.getType.profit_margin).toFixed(2))
-          // w = parseFloat(this.variant.width - this.getType.profit_margin).toFixed(2)
-          // this.widthMargins = this.getType.min_width + ' a ' + w
           return (parseFloat(this.variant.width - this.getType.profit_margin).toFixed(2))
         } else {
           this.calculateWidthMargins(this.getType.max_width)
-          // this.widthMargins = this.getType.min_width + ' a ' + w
           return parseFloat(this.getType.max_width).toFixed(2)
         }
       } else {
@@ -322,12 +459,12 @@ export default {
     },
 
     variants () {
-      if (this.order.type && this.order.line) {
+      if (this.order.type && this.order.line && this.order.manufacturer) {
         return this.$store.state.products.variants.filter(
           (variant) =>
             variant.type === this.order.type && variant.line === this.order.line
         )
-      } else if (this.order.type) {
+      } else if (this.order.type && this.order.manufacturer) {
         return this.$store.state.products.variants.filter(
           (variant) => variant.type === this.order.type
         )

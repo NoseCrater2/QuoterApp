@@ -113,9 +113,9 @@ module.exports = function (/* ctx */) {
       workboxPluginMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
       workboxOptions: {}, // only for GenerateSW
       manifest: {
-        name: 'Quasar App',
-        short_name: 'Quasar App',
-        description: 'A Quasar Framework app',
+        name: 'Rollux Cotizador',
+        short_name: 'Rollux Cotizador',
+        description: 'Cotizador de persianas',
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#ffffff',
