@@ -2,6 +2,8 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import products from './products'
 import orders from './orders'
+import motorization from './motorization'
+import user from './user'
 
 // import example from './module-example'
 
@@ -20,7 +22,9 @@ export default function (/* { ssrContext } */) {
   const Store = new Vuex.Store({
     modules: {
       products,
-      orders
+      orders,
+      motorization,
+      user
     },
 
     // enable strict mode (adds overhead!)

@@ -5,7 +5,8 @@ const products = {
     types: [],
     lines: [],
     variants: [],
-    relatedColors: []
+    relatedColors: [],
+    relatedColors2: []
   },
 
   getters: {
@@ -16,8 +17,8 @@ const products = {
       return state.lines.filter((line) => line.types.includes(slug))
     },
 
-    getVariant: (state) => (id) => {
-      return state.variants.find((t) => t.id === id)
+    getVariant: (state) => (slug, type) => {
+      return state.variants.find((t) => t.slug === slug && t.type.slug === type)
     }
   },
 
@@ -39,6 +40,10 @@ const products = {
 
     setRelatedColors (state, colors) {
       state.relatedColors = colors
+    },
+
+    setRelatedColors2 (state, colors) {
+      state.relatedColors2 = colors
     }
   },
 
@@ -79,12 +84,21 @@ const products = {
       }
     },
 
-    getRelatedColors: async function ({ commit }, idVariant) {
+    getRelatedColors: async function ({ commit }, data) {
       try {
         const response = await api
-          .get('/api/getColors/' + idVariant)
+          .get('/api/getColors/' + data.slug + '/' + data.type)
         commit('setRelatedColors', response.data.data)
       } catch (error) {}
+    },
+
+    getRelatedColors2: async function ({ commit }, data) {
+      try {
+        const response = await api
+          .get('/api/getColors/' + data.slug + '/' + data.type)
+        commit('setRelatedColors2', response.data.data)
+      } catch (error) {
+      }
     }
   }
 }
