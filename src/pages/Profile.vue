@@ -6,8 +6,9 @@
       </q-card-section> -->
 
       <q-tabs dense v-model="tab" class="text-primary">
-        <q-tab label="Cuenta" icon="person" name="one"></q-tab>
+        <q-tab label="Cuenta"  name="one" icon="person"></q-tab>
         <q-tab label="General" name="two" icon="class"></q-tab>
+        <q-tab label="Pago" name="three" icon="credit_card"></q-tab>
       </q-tabs>
 
       <q-separator></q-separator>
@@ -94,6 +95,9 @@
               <q-icon name="phone_android" />
             </template>
           </q-input>
+        </q-tab-panel>
+        <q-tab-panel name="three" >
+
         </q-tab-panel>
       </q-tab-panels>
     </q-card>

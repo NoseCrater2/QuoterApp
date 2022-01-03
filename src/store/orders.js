@@ -4,6 +4,8 @@ const orders = {
     orders: [],
     blinds: [],
     savedOrders: [],
+    quotingOrder: {},
+    quotedOrder: {},
     order: {
       manufacturer: null,
       type: null,
@@ -80,7 +82,31 @@ const orders = {
     },
 
     totalSavedorders (state) {
-      return state.savedOrders.length
+      return state.savedOrders.filter(order => order.state !== 'No Pagada').length
+    },
+
+    totalMarketcarOrders (state) {
+      return state.savedOrders.filter(order => order.state === 'No Pagada').length
+    },
+
+    getterVigentQuotings (state) {
+      return state.blinds.filter(itemOrder => {
+        let order
+        if (itemOrder.state === true) {
+          order = itemOrder
+        }
+        return order
+      })
+    },
+
+    getterNoVigentQuotings (state) {
+      return state.blinds.filter(itemOrder => {
+        let order
+        if (itemOrder.state === false) {
+          order = itemOrder
+        }
+        return order
+      })
     }
 
   },
@@ -89,10 +115,15 @@ const orders = {
     setQuotedOrders (state, orders) {
       state.savedOrders = orders
     },
+    setQuotedOrder (state, order) {
+      state.quotedOrder = order
+    },
     setQuotingOrders (state, orders) {
       state.blinds = orders
     },
-
+    setQuotingOrder (state, order) {
+      state.quotingOrder = order
+    },
     pushProductToCart (state, item) {
       state.orders.push(item)
       // state.orders.push(item)
@@ -124,12 +155,21 @@ const orders = {
         return currentOrder
       })
     },
+
     deleteOrders (state) {
       state.orders = []
     },
+
     deleteQuoting (state, deleteOrder) {
       const u = state.blinds.find(order => order.id === deleteOrder.id)
-      state.blinds.splice(state.quotingOrders.indexOf(u), 1)
+      state.blinds.splice(state.blinds.indexOf(u), 1)
+      state.quotingOrder = JSON.parse(JSON.stringify(Object.assign(state.quotingOrder, {})))
+    },
+
+    deleteQuoted (state, deleteOrder) {
+      const u = state.savedOrders.find(order => order.id === deleteOrder.id)
+      state.savedOrders.splice(state.savedOrders.indexOf(u), 1)
+      state.quotedOrder = JSON.parse(JSON.stringify(Object.assign(state.quotedOrder, {})))
     }
   },
 
@@ -167,6 +207,14 @@ const orders = {
       } catch (error) { }
     },
 
+    getQuotingOrder: async function ({ commit, state }, id) {
+      try {
+        const response = await api
+          .get('/api/orders/' + id)
+        commit('setQuotingOrder', response.data.data)
+      } catch (error) { }
+    },
+
     getQuotedOrders: async function ({ commit, state }) {
       try {
         const response = await api
@@ -175,9 +223,18 @@ const orders = {
       } catch (error) {}
     },
 
+    getQuotedOrder: async function ({ commit, state }, id) {
+      try {
+        const response = await api
+          .get('/api/orders/' + id)
+        commit('setQuotedOrder', response.data.data)
+      } catch (error) {}
+    },
+
     deleteOrders: function (context) {
       context.commit('deleteOrders')
     },
+
     saveQuotations: async function ({ commit, state }) {
       const data = {}
       data.orders = state.orders
@@ -200,11 +257,53 @@ const orders = {
         console.log(response)
       } catch (error) {}
     },
+
+    // ACTUALIZA LA COTIZACION CON LA FECHA Y PRECIO ACTUAL
+    revalidateItemQuotation: async function ({ commit, state }, objUpdate) {
+      try {
+        await api
+          .post('/api/revalidate-item-quotation/' + objUpdate.localItemQuotationId, objUpdate.localNewPrice)
+      } catch (error) {}
+    },
+
+    // CAMBIA DE COTIZACION A ORDEN (USADA EN DETAILSSAVEDBLINDS.vue)
+    changeToOrder: async function ({ commit }, id) {
+      try {
+        const response = await api
+          .get('/api/changequoting/' + id)
+        commit('deleteQuoting', response.data.data)
+      } catch (error) {}
+    },
+
+    // ACCIÓN UTILIZADA EN MENU MARKETCAR PARA REGRESAR UNA ORDEN A COTIZACION
+    removeOrderMarketcar: async function ({ commit }, id) {
+      try {
+        await api
+          .get('/api/remove-order-marketcar/' + id)
+      } catch (error) {}
+    },
+
+    // ACCIÓN UTILIZADA EN LA VISTA MARKETCAR PARA ELIMINAR UNA PERSIANA DE LA ORDEN
+    deleteBlindFromOrder: async function ({ commit }, id) {
+      try {
+        await api
+          .delete('/api/blinds/' + id)
+      } catch (error) {}
+    },
+
     deleteQuoting: async function ({ commit }, id) {
       try {
         const response = await api
           .delete('/api/orders/' + id)
         commit('deleteQuoting', response.data.data)
+      } catch (error) {}
+    },
+
+    deleteQuoted: async function ({ commit }, id) {
+      try {
+        const response = await api
+          .delete('/api/orders/' + id)
+        commit('deleteQuoted', response.data.data)
       } catch (error) {}
     }
   }

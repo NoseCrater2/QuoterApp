@@ -47,7 +47,7 @@ export default {
           description: 'Ve tus persianas que dejaste para despúes',
           route: 'saved-blinds',
           icon: 'playlist_add_check',
-          count: this.$store.getters.totalBlinds
+          count: this.$store.getters.getterVigentQuotings.length
         },
         {
           title: 'Ver órdernes',
@@ -59,9 +59,9 @@ export default {
         {
           title: 'Ver carrito',
           description: 'Persianas listas para comprar',
-          route: 'orders',
+          route: 'marketcar',
           icon: 'local_shipping',
-          count: this.$store.getters.totalSavedorders
+          count: this.$store.getters.totalMarketcarOrders
         },
         {
           title: 'Ver perfil',

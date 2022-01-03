@@ -1,7 +1,7 @@
 <template>
   <q-page class="bg-grey-2">
     <div class="q-pa-md">
-      <div class="q-gutter-y-md">
+      <div class="q-gutter-y-md" >
         <q-tabs
         v-model="tab"
         dense
@@ -15,11 +15,11 @@
         </q-tabs>
         <q-tab-panels v-model="tab" animated>
           <q-tab-panel name="current" style="margin: 0; padding: 0;">
-            <q-card bordered flat v-for="(item ,index) in computedPayedOrders" :key="index">
-                <q-slide-item left-color="red" right-color="green" >
+            <q-card bordered flat v-for="(item ,index) in computedNoPayedOrders" :key="index">
+                <q-slide-item @right="onRight" left-color="red" right-color="green" >
                   <q-item clickable @click="seeDetails(item)" style="display: flex; justify-content: space-around;">
                     <q-item-section >
-                      <q-avatar  rounded size="48px">
+                      <q-avatar rounded size="48px">
                         <img src="/img/blinds.svg" />
                         <q-badge style="margin-top: 13px;margin-right: 18px;" floating rounded color="teal">{{item.blinds}}</q-badge>
                       </q-avatar>
@@ -40,6 +40,11 @@
                       <q-item-label style="font-size: 10px">{{item.updated_at}}</q-item-label>
                     </q-item-section>
                   </q-item>
+                  <template v-slot:right>
+                    <div class="row items-center">
+                      Comprar<q-icon right name="credit_card" />
+                    </div>
+                  </template>
                 </q-slide-item>
             </q-card>
           </q-tab-panel>
@@ -70,8 +75,8 @@ export default {
     ...mapState({
       orders: (state) => state.orders.savedOrders
     }),
-    computedPayedOrders () {
-      return this.orders.filter(order => order.state !== 'No Pagada')
+    computedNoPayedOrders () {
+      return this.orders.filter(order => order.state === 'No Pagada')
     }
   },
 
@@ -94,7 +99,7 @@ export default {
     },
 
     seeDetails (item) {
-      this.$router.push({ name: 'DetailsOrders', params: { item: item } })
+      this.$router.push({ name: 'DetailsMarketcar', params: { item: item } })
     }
   }
 }
