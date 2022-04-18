@@ -29,7 +29,7 @@
           :rules="[ val => val >= 0.5 && val <= 99 || 'Valor entre 0.5 y 99']">
           </q-input>
         </q-card-section>
-        <q-card-section v-if="order.type == 'panel-japnes'">
+        <q-card-section v-if="order.type == 'panel-japones'">
           <q-select
           dense
           rounded

@@ -1,7 +1,7 @@
 <template>
     <q-page class="bg-primary">
         <q-card flat class="absolute-center bg-primary text-white">
-          <img src="/img/white-r.svg" class="inout">
+          <img src="statics/img/white-r.png" class="inout">
         </q-card>
     </q-page>
 </template>

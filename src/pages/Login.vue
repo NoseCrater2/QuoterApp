@@ -4,7 +4,7 @@
       <q-page class="bg-primary">
         <q-card class="absolute-center bg-primary text-white"  flat style="width: 95%">
           <q-card-section class="text-center">
-            <q-img width="200px"  src="img/white-r.svg"></q-img>
+            <q-img width="200px"  src="statics/img/white-r.png"></q-img>
           </q-card-section>
           <q-card-section class="text-center">
             Bienvenido al cotizador de Rollux

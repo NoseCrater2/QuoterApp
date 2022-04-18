@@ -55,6 +55,10 @@
         </q-tab-panels>
       </div>
     </div>
+      <q-inner-loading
+        :showing="loadingQuotations"
+        color="teal"
+      />
   </q-page>
 </template>
 
@@ -63,10 +67,14 @@ import { mapState, mapGetters } from 'vuex'
 import itemQuotation from '../components/ItemQuotation.vue'
 export default {
   created () {
-    console.log(this.blinds)
+    this.loadingQuotations = true
+    this.$store.dispatch('getQuotingOrders').then(
+      this.loadingQuotations = false
+    )
   },
   data () {
     return {
+      loadingQuotations: true,
       tab: 'current'
     }
   },

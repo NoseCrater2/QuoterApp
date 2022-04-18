@@ -12,12 +12,15 @@
           <q-card class="my-card" flat bordered>
             <q-card-actions>
               {{mxCurrencyFormat.format(
-                o.price +
-                o.motor.price +
-                o.motor.flexiballetPrice +
-                o.motor.galleryPrice +
-                o.motor.manufacturerPrice +
-                o.motor.stringPrice
+                 (o.price +
+                  o.motor.price +
+                  o.motor.flexiballetPrice +
+                  o.motor.galleryPrice +
+                  o.motor.manufacturerPrice +
+                  o.motor.stringPrice +
+                  o.extraEnrollable +
+                  o.extraVertical +
+                  o.installmentCharge) * ((o.count_same_blinds > 0) ? o.count_same_blinds : 1)
               )}} MXN
               <q-space></q-space>
               <q-btn flat color="teal-3" round icon="edit" @click="openEditDialog(o.id)">
@@ -45,7 +48,7 @@
                   <div v-if="o.second_color != null">SKU: {{ o.second_color.code }} </div>
                    <q-item-label lines="1" class="q-mt-xs text-body2 text-weight-bold text-primary text-uppercase">
                       <span>
-                        ${{$store.getters.getVariant(o.variant, o.type).price}} MXN
+                        ${{o.base_price}} MXN
                       </span>
                     </q-item-label>
                 </div>
@@ -106,17 +109,6 @@
               <q-separator class="q-mx-sm" vertical></q-separator>
               Ancho: {{c.width}}m
             </q-chip>
-            <!-- <q-list dense >
-              <q-item >
-              <q-item-section >
-                <q-item-label caption>
-                  <div class="text-bold"  style="display: inline">LIENZO {{ index + 1 }}</div>
-                  <div style="display: inline">ALTO: {{ c.height }}m</div>
-                  <div style="display: inline">ANCHO: {{ c.width }}m</div>
-                </q-item-label>
-              </q-item-section>
-              </q-item>
-            </q-list> -->
             <q-card-section >
               <div class="text-overline">{{o.motor.drive}}</div>
               <div class="text-overline">{{o.motor_type}}</div>
@@ -177,6 +169,9 @@
                   <span>${{o.motor.stringPrice}}</span>
                 </q-item-label>
               </q-item>
+              <q-item dense v-if="o.cloth_holder != null">
+                <q-item-section>CON PORTATELA</q-item-section>
+              </q-item>
               <q-item dense>
                 <q-item-section>Extra</q-item-section>
                 <q-item-label
@@ -185,8 +180,13 @@
                   <span>${{o.motor.flexiballetPrice + o.extraEnrollable + o.extraVertical}}</span>
                 </q-item-label>
               </q-item>
-              <q-item dense v-if="o.cloth_holder != null">
-                <q-item-section>CON PORTATELA</q-item-section>
+               <q-item dense>
+                <q-item-section>Cantidas de persianas de este tipo</q-item-section>
+                <q-item-section side>{{o.count_same_blinds}}</q-item-section>
+              </q-item>
+              <q-item dense>
+                <q-item-section>Cargo por instalación</q-item-section>
+                <q-item-section class="text-primary" side>${{o.installmentCharge}}</q-item-section>
               </q-item>
             </q-card-section>
             <q-card-section v-if="o.motor.motor != null && o.motor.motor > 0">
@@ -373,12 +373,77 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+    <q-dialog v-model="pdfOptionsDialog" persistent transition-show="scale" transition-hide="scale">
+      <q-card style="width: 300px">
+        <q-card-section class="flex bg-teal-4 text-white">
+           <q-btn v-if="showClientForm" @click="showClientForm = false" round flat color="white" dense style="transform: rotate(180deg)" icon="play_arrow" />
+          <div class="text-h6">Opciones de PDF</div>
+        </q-card-section>
+        <q-card-section v-if="!showClientForm">
+          <q-list separator>
+            <q-item clickable @click="downloadPDF()">
+              <q-item-section avatar>
+                <q-icon color="primary" name="person"/>
+              </q-item-section>
+               <q-item-section>Imprimir como distribuidor</q-item-section>
+            </q-item>
+            <q-item clickable @click="showClientForm = true">
+              <q-item-section avatar>
+                <q-icon color="primary" name="group"/>
+              </q-item-section>
+               <q-item-section>Imprimir para cliente</q-item-section>
+            </q-item>
+            <q-item clickable @click="downloadBasicPdf()">
+              <q-item-section avatar>
+                <q-icon color="primary" name="print"/>
+              </q-item-section>
+               <q-item-section>Imprimir sin distribuidor</q-item-section>
+            </q-item>
+          </q-list>
+        </q-card-section>
+        <q-card-section v-if="showClientForm">
+          <q-item-label header class="text-center">Imprimir para un cliente</q-item-label>
+          <q-form ref="clientform">
+            <q-input v-model="client.name" dense label="Nombre" :rules="[val => !!val ]" hide-bottom-space>
+              <template v-slot:prepend><q-icon name="face" /></template>
+            </q-input>
+            <q-input v-model="client.last_name" dense label="Apellido(s)" :rules="[val => !!val ]" hide-bottom-space>
+              <template v-slot:prepend><q-icon name="person" /></template>
+            </q-input>
+            <q-input v-model="client.discount_percent" dense label="Descuento" :rules="[val => !!val ]" hide-bottom-space>
+              <template v-slot:prepend><q-icon name="local_offer" /></template>
+            </q-input>
+            <q-input v-model="client.phone" dense label="Teléfono" :rules="[val => !!val ]" hide-bottom-space>
+              <template v-slot:prepend><q-icon name="smartphone" /></template>
+            </q-input>
+            <q-input v-model="client.email" dense label="Email" :rules="[val => !!val ]" hide-bottom-space>
+              <template v-slot:prepend><q-icon name="mail" /></template>
+            </q-input>
+            <q-input v-model="client.rfc" dense label="RFC" >
+              <template v-slot:prepend><q-icon name="attribution" /></template>
+            </q-input>
+            <q-input v-model="client.company" dense label="Nombre de la empresa" >
+              <template v-slot:prepend><q-icon name="business" /></template>
+            </q-input>
+            <q-input v-model="client.ship_address" dense label="Dirección de envío" >
+              <template v-slot:prepend><q-icon name="local_shipping" /></template>
+            </q-input>
+          </q-form>
+        </q-card-section>
+        <q-separator></q-separator>
+         <q-card-actions>
+          <q-btn flat label="CANCELAR" color="red" @click="pdfOptionsDialog = false; showClientForm = false" v-close-popup />
+          <q-space></q-space>
+          <q-btn flat v-if="showClientForm" label="ACEPTAR" @click="validateClient()" color="primary" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
     <q-footer v-if="$store.state.orders.orders.length > 0">
       <q-btn-group spread outline>
         <q-btn color="grey-9"  icon="add" @click="newOrdersDialog = true" />
-        <q-btn color="grey-9"  icon="save" @click="saveBlinds()" />
-        <q-btn color="grey-9"  icon="add_shopping_cart" @click="saveAsOrder()" />
-        <q-btn color="grey-9"  icon="picture_as_pdf" @click="downloadPDF()" :loading="loadingPDF" />
+        <q-btn color="grey-9"  icon="save" @click="saveBlinds()" :loading="loadingBlinds" />
+        <q-btn color="grey-9"  icon="add_shopping_cart" @click="saveAsOrder()" :loading="loadingOrders" />
+        <q-btn color="grey-9"  icon="picture_as_pdf" @click="pdfOptionsDialog = true" :loading="loadingPDF" /> <!-- @click="downloadPDF()" -->
       </q-btn-group>
     </q-footer>
   </q-page>
@@ -389,9 +454,33 @@ import { mapState } from 'vuex'
 export default {
   data () {
     return {
+      showClientForm: false,
+      client: {
+        name: null,
+        last_name: null,
+        discount_percent: 0,
+        phone: null,
+        email: null,
+        rfc: null,
+        company: null,
+        ship_address: null
+      },
+      defaultClient: {
+        name: null,
+        last_name: null,
+        discount_percent: 0,
+        phone: null,
+        email: null,
+        rfc: null,
+        company: null,
+        ship_address: null
+      },
+      loadingBlinds: false,
+      loadingOrders: false,
       message: null,
       loadingPDF: false,
       newOrdersDialog: false,
+      pdfOptionsDialog: false,
       selectedId: 0,
       editConfirmDialog: false,
       removeConfirmDialog: false,
@@ -410,6 +499,68 @@ export default {
   },
 
   methods: {
+    downloadBasicPdf () {
+      api.post('/api/order-list-pdf', this.$store.state.orders.orders, { responseType: 'blob' }).then((response) => {
+        const blob = new Blob([response.data])
+        if (typeof cordova !== 'undefined') {
+          const currenDate = new Date()
+          const formattedDate = currenDate.getFullYear() + '' + (currenDate.getMonth() + 1) + '' + currenDate.getDate() + '' + currenDate.getHours() + '' + currenDate.getMinutes() + '' + currenDate.getSeconds()
+          this.saveBlob2File(`Cotización-${formattedDate}.pdf`, blob)
+          this.$q.notify({
+            type: 'positive',
+            message: 'Pdf guardado en descargas!'
+          })
+        } else {
+          this.$q.notify({
+            type: 'warning',
+            message: 'Debes iniciar sesión desde un celular.'
+          })
+        }
+      }).catch(error => {
+        console.log(error)
+        this.$q.notify({
+          type: 'negative',
+          message: 'No se pudo descargar el pdf!'
+        })
+      })
+    },
+    validateClient () {
+      this.$refs.clientform.validate().then(success => {
+        if (success) {
+          this.client.id = this.user.id
+          api.post('/api/auth-order-list-pdf-distributor', { orders: this.$store.state.orders.orders, user: this.client }, { responseType: 'blob' }).then((response) => {
+            const blob = new Blob([response.data])
+            if (typeof cordova !== 'undefined') {
+              const currenDate = new Date()
+              const formattedDate = currenDate.getFullYear() + '' + (currenDate.getMonth() + 1) + '' + currenDate.getDate() + '' + currenDate.getHours() + '' + currenDate.getMinutes() + '' + currenDate.getSeconds()
+              this.saveBlob2File(`Cotización-${formattedDate}.pdf`, blob)
+              this.$q.notify({
+                type: 'positive',
+                message: 'Pdf guardado en descargas!'
+              })
+            } else {
+              this.$q.notify({
+                type: 'warning',
+                message: 'Debes iniciar sesión desde un celular.'
+              })
+            }
+            this.client = Object.assign(this.defaultClient, {})
+            this.pdfOptionsDialog = false
+            this.showClientForm = false
+          }).catch(error => {
+            this.client = Object.assign(this.defaultClient, {})
+            this.pdfOptionsDialog = false
+            this.showClientForm = false
+            console.log(error)
+            this.$q.notify({
+              type: 'negative',
+              message: 'No se pudo descargar el pdf!'
+            })
+          })
+        }
+      })
+    },
+
     edit () {
       this.$store.dispatch('assignOrder', this.selectedId).then(() => {
         this.$router.push({ name: 'Quoter', params: { isEditing: true } })
@@ -439,24 +590,48 @@ export default {
       // if (this.$route.params.order_id) {
       //   this.$store.dispatch('updateQuotations', { 'orders': this.orders, 'id': this.$route.params.order_id })
       // } else {
+      this.loadingBlinds = true
       this.$store.dispatch('saveQuotations').then(() => {
         this.$store.dispatch('deleteOrders')
-        this.$router.replace('Saved')
+        this.loadingBlinds = false
+        this.$router.replace({ name: 'Saved' })
       })
       // }
     },
     saveAsOrder () {
+      this.loadingOrders = true
       this.$store.dispatch('saveOrders').then(() => {
         this.$store.dispatch('deleteOrders')
-        this.$router.replace('Orders')
+        this.loadingOrders = true
+        this.$router.replace({ name: 'Orders' })
       })
     },
     async downloadPDF () {
-      await api.post('/api/auth-order-list-pdf', { orders: this.$store.state.orders.orders, user: this.user }, { responseType: 'blob' }).then((response) => {
+      this.loadingPDF = true
+      await api.post('/api/auth-order-list-pdf-distributor', { orders: this.$store.state.orders.orders, user: this.user }, { responseType: 'blob' }).then((response) => {
         const blob = new Blob([response.data])
         if (typeof cordova !== 'undefined') {
-          this.saveBlob2File('modelos.pdf', blob)
+          const currenDate = new Date()
+          const formattedDate = currenDate.getFullYear() + '' + (currenDate.getMonth() + 1) + '' + currenDate.getDate() + '' + currenDate.getHours() + '' + currenDate.getMinutes() + '' + currenDate.getSeconds()
+          this.saveBlob2File(`Cotización-${formattedDate}.pdf`, blob)
+          this.$q.notify({
+            type: 'positive',
+            message: 'Pdf guardado en descargas!'
+          })
+        } else {
+          this.$q.notify({
+            type: 'warning',
+            message: 'Debes iniciar sesión desde un celular.'
+          })
         }
+        this.loadingPDF = false
+      }).catch(error => {
+        this.loadingPDF = false
+        console.log(error)
+        this.$q.notify({
+          type: 'negative',
+          message: 'No se pudo descargar el pdf!'
+        })
       })
     },
     saveBlob2File (fileName, blob) {
@@ -476,15 +651,19 @@ export default {
     },
 
     writeFile (fileEntry, dataObj) {
+      // return this.$q(function (resolve, reject) {
       fileEntry.createWriter(fileWriter => {
         fileWriter.onwriteend = () => {
+          // resolve()
           console.log('Successful file write...')
         }
         fileWriter.onerror = error => {
+          // reject()
           this.message = 'Failed file write: ' + error
         }
         fileWriter.write(dataObj)
       })
+      // })
     }
   }
 }

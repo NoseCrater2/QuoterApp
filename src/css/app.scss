@@ -1,9 +1,25 @@
 // app global css in SCSS form
 @font-face {
     font-family: Montserrat;
-    src: url('https://fonts.googleapis.com/css2?family=Montserrat');
+    src: url('../../public/fonts/Montserrat-Medium.ttf');
+}
+@font-face {
+  font-family: Montserrat-Light;
+  src: url('../../public/fonts/Montserrat-Light.ttf');
+}
+
+@font-face {
+  font-family: Montserrat-Bold;
+  src: url('../../public/fonts/Montserrat-Bold.ttf');
 }
 
 .montserrat {
     font-family: 'Montserrat';
+}
+.montserrat-light {
+  font-family: 'Montserrat-Light';
+}
+
+.montserrat-bold {
+  font-family: 'Montserrat-Bold';
 }

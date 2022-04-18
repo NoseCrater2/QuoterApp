@@ -3,7 +3,7 @@
     <q-page-container>
       <q-page class="bg-primary">
           <q-card flat class="absolute-center bg-primary text-white">
-            <img src="/img/white-r.svg" class="inout">
+            <img src="statics/img/white-r.png" class="inout">
           </q-card>
       </q-page>
     </q-page-container>
@@ -11,42 +11,36 @@
   <q-layout v-else view="lHh Lpr lFf">
     <q-header>
       <q-toolbar>
-        <q-btn
-          v-if="$route.name === 'Home'"
-          flat
-          dense
-          round
-          icon="menu"
-          aria-label="Menu"
-          @click="leftDrawerOpen = !leftDrawerOpen"
-        >
-          <!-- <q-avatar size="42px">
-            <img >$router.back()
-          </q-avatar> -->
-        </q-btn>
+        <div style="margin: auto" class="q-py-sm" v-if="$route.name === 'Home'">
+          <img
+          height="50px"
+          src="https://rollux.com.mx/img/white-logo.png">
+        </div>
        <q-btn
           v-else
+          size="20px"
+          style="transform: rotate(180deg);"
           flat
           dense
           round
-          icon="arrow_back"
+          icon="play_arrow"
           aria-label="Atrás"
           @click="$route.name === 'Motorization'?$router.replace({name: 'Quoter'}):$router.replace({name: 'Home'})"
         />
 
-        <q-toolbar-title  v-if="$route.name !== 'Motorization'" class="absolute-center">
+        <q-toolbar-title class="montserrat-light" v-if="$route.name !== 'Motorization' && $route.meta.title != ''" style="text-align: center">
           {{$route.meta.title}}
         </q-toolbar-title>
-        <q-toolbar-title v-else-if="order.motor_type === 'Motorizado'">
+        <q-toolbar-title style="text-align: center" v-else-if="order.motor_type === 'Motorizado'">
           <div v-if="order.type == 'PANEL JAPONES'">Panel Japones Motorizado</div>
           <div >Persiana Motorizada</div>
         </q-toolbar-title>
-        <q-toolbar-title v-else-if="order.motor_type === 'Manual'">
+        <q-toolbar-title style="text-align: center" v-else-if="order.motor_type === 'Manual'">
           <div
           v-if="order.type === 'PANEL JAPONES'">Panel Japones Manual</div>
           <div >Persiana Manual</div>
         </q-toolbar-title>
-          <!-- <q-img class="absolute-right" src="img/white-r.svg"  style="width: 49px; height: 49px;"></q-img> -->
+         <q-btn v-if="$route.name != 'Home'" flat round dense icon="calculate" />
       </q-toolbar>
     </q-header>
 
@@ -61,8 +55,8 @@
           header
           class="text-grey-8"
         >
-          {{ user.name + ' ' + user.last_name  }} -
-          {{ user.role}}
+          <!-- {{ user.name + ' ' + user.last_name  }} -
+          {{ user.role}} -->
 
         </q-item-label>
         <EssentialLink
@@ -74,7 +68,9 @@
     </q-drawer>
 
     <q-page-container>
-      <router-view />
+      <transition name="fade" >
+        <router-view />
+      </transition>
     </q-page-container>
   </q-layout>
 </template>
@@ -146,8 +142,8 @@ export default {
   },
   computed: {
     ...mapState({
-      order: (state) => state.orders.order,
-      user: (state) => state.user.user
+      order: (state) => state.orders.order
+      // user: (state) => state.user.user
     })
   },
 
@@ -194,5 +190,55 @@ font-family: 'Montserrat';
     100%{
       transform: scale(.93);
     }
+}
+
+.slide-enter-active,
+.slide-leave-active{
+  transition: opacity 1s, transform 1s;
+}
+
+.slide-enter,
+.slide-leave-to{
+  opacity: 0;
+  transform: translateX(-30%);
+}
+
+.moveUp-enter-active{
+  animation: fadeIn 1s ease-in;
+}
+
+@keyframes fadeIn {
+  0%{
+    opacity: 0;
+  }
+  50%{
+    opacity: 0.5;
+  }
+  100%{
+    opacity: 1;
+  }
+}
+
+.moveUp-leave-active{
+  animation: moveUp 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  0%{
+    transform: translateY(0);
+  }
+  100%{
+    ransform: translateY(-100px);
+  }
+}
+
+.fade-enter-active,
+.fade-leave-active{
+  transition: opacity 0.3s;
+}
+
+.fade-enter,
+.fade-leave-to{
+  opacity: 0;
 }
 </style>

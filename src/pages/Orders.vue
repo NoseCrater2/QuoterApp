@@ -20,7 +20,7 @@
                   <q-item clickable @click="seeDetails(item)" style="display: flex; justify-content: space-around;">
                     <q-item-section >
                       <q-avatar  rounded size="48px">
-                        <img src="/img/blinds.svg" />
+                        <img src="statics/img/blinds.png" />
                         <q-badge style="margin-top: 13px;margin-right: 18px;" floating rounded color="teal">{{item.blinds}}</q-badge>
                       </q-avatar>
                     </q-item-section>

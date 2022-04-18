@@ -1,17 +1,75 @@
 <template>
-  <q-page class="flex">
+  <q-page>
+    <q-card class="text-white text-center" style="width: 100%; height: 75px; background-color: #404042; border-radius: 0 0 15px 15px; font-size: 11px">
+      <q-card-section  horizontal class="row justify-between">
+        <q-card-section class="col-5">
+          <span> PERSIANA:</span>
+          <p
+          v-if="order.type == 'horizontal-madera-2'"
+          class="montserrat-bold"
+          style="font-size: 1em !important;line-height: normal; color: #47a5ad" >
+          {{ mxCurrencyFormat.format(findWoodPrice * order.count_same_blinds) }} MXN
+          </p>
+          <p
+          v-if="order.type == 'celular'"
+          class="montserrat-bold"
+          style="font-size: 1em !important;line-height: normal; color: #47a5ad" >
+            {{mxCurrencyFormat.format(findCelularPrice * order.count_same_blinds)}} MXN
+          </p>
+          <p
+          class="montserrat-bold"
+          v-else
+          style="font-size: 1em !important;line-height: normal; color: #47a5ad" >
+           {{ mxCurrencyFormat.format((unitaryPrice * order.count_same_blinds) + parseFloat(extraEnrollablePrice) + parseFloat(extraVerticalPrice)) }} MXN
+          </p>
+        </q-card-section>
+        <q-separator  inset style="height: 70px" dark vertical />
+        <q-card-section class="col-5">
+          <span> MOTOR/CONTROL GALERÍA</span>
+          <p v-if="order.celular_variant != null" class="montserrat-bold" style="color: #47a5ad">
+            {{mxCurrencyFormat.format(motorCelularPrice())}}
+            MXN
+          </p>
+          <p v-else class="montserrat-bold primary" style="color: #47a5ad">
+            {{
+              mxCurrencyFormat.format(
+                order.motor.price +
+                order.motor.flexiballetPrice +
+                order.motor.galleryPrice +
+                order.motor.manufacturerPrice +
+                order.motor.stringPrice
+              )
+            }}
+            MXN
+          </p>
+        </q-card-section>
+      </q-card-section>
+    </q-card>
+
     <span v-if="order.id" class="q-pl-md text-red">Editando persiana {{order.id}}</span>
     <q-stepper
       flat
       v-model="step"
       vertical
-      color="primary"
       animated
       style="width: 100%;"
     >
+        <q-btn-dropdown
+        size="sm"
+        class="bg-grey-7"
+        flat
+        :label="`Cantidad ${order.count_same_blinds}`"
+        rounded
+        color="white"
+        no-icon-animation
+        style="position: absolute;right: 25px;margin-top: 2px;z-index: 2;"
+        >
+        <q-input dense class="for-text-center" type="number" v-model.number="order.count_same_blinds" placeholder="Cantidad"/>
+        </q-btn-dropdown>
       <q-step
+      :caption="`${order.type != null ? order.type.toUpperCase() : ''}${order.manufacturer != null ? ' - ' + order.manufacturer.replace(/-/gi,' ').toUpperCase() : ''}`"
       :name="1"
-      :title="order.type != null && order.manufacturer != null ?`TIPO: ${order.type.toUpperCase()} y FABRICANTE: ${order.manufacturer}`:'Selecciona Tipo y Línea'"
+      title="Selecciona Tipo y Línea"
       prefix="1"
       :done="step > 1"
       >
@@ -50,24 +108,25 @@
         color="primary"
         :options="getType.lines"
         lazy-rules
-        label="Marca"
+        label="Línea"
         @input="step = 2"
         ></q-select>
         <q-stepper-navigation class="flex">
           <q-space></q-space>
           <q-btn
+          class="arrows"
           v-if="(order.type != null && order.manufacturer != null) || order.type == 'vertical'"
           @click="step = 2"
           color="primary"
-          icon="arrow_downward"
-          flat rounded
-          ></q-btn>
+          icon-right="arrow_forward_ios"
+          label="siguiente" flat />
         </q-stepper-navigation>
       </q-step>
       <div v-if="order.type === 'horizontal-madera-2' || order.type === 'horizontal-aluminio-2'">
         <q-step
         :name="2"
-        :title="order.motor_type != null? `Modo de accionamiento: ${order.motor_type}` : 'Selecciona modo de accionamiento'"
+        :title="'Selecciona modo de accionamiento'"
+        :caption="order.motor_type != null? `${order.motor_type}` : ''"
         prefix="2"
         :done="order.motor_type != null"
         >
@@ -82,17 +141,19 @@
           inline
           ></q-option-group>
           <q-stepper-navigation class="flex">
-            <q-btn @click="step = 1" color="primary" icon="arrow_upward" flat rounded></q-btn>
+            <q-btn class="arrows" @click="step = 1" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
             <q-space></q-space>
-            <q-btn @click="step = 3" color="primary" icon="arrow_downward" flat rounded></q-btn>
+            <q-btn class="arrows" @click="step = 3" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
           </q-stepper-navigation>
         </q-step>
         <q-step
         :name="3"
-        :title="order.motor.drive != null? `Accionamiento: ${order.motor.drive}` : 'Selecciona Accionamiento'"
+        :title="'Selecciona Accionamiento'"
+        :caption="order.motor.drive != null? `${order.motor.drive}` : ''"
         prefix="3"
         :done="step > 3"
         >
+         <q-input rounded outlined dense v-model.number="order.installmentCharge" prefix="$" label="Cargo por instalación"></q-input>
           <q-option-group
           v-model="order.motor.drive"
           :options="motor_drive_options"
@@ -100,14 +161,15 @@
           inline
           ></q-option-group>
           <q-stepper-navigation class="flex">
-            <q-btn @click="step = 2" color="primary" icon="arrow_upward" flat rounded></q-btn>
+            <q-btn class="arrows" @click="step = 2" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
             <q-space></q-space>
-            <q-btn @click="step = 4" color="primary" icon="arrow_downward" flat rounded></q-btn>
+            <q-btn class="arrows" @click="step = 4" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
           </q-stepper-navigation>
         </q-step>
         <q-step
         :name="4"
-        :title="order.motor.side_control != null? afterSideControlTitle: preSideControlTitle"
+        :title="preSideControlTitle"
+        :caption="order.motor.side_control != null ? afterSideControlTitle : ''"
         prefix="4"
         :done="step > 4"
         >
@@ -118,9 +180,9 @@
           inline
           ></q-option-group>
           <q-stepper-navigation class="flex">
-            <q-btn @click="step = 3" color="primary" icon="arrow_upward" flat rounded></q-btn>
+            <q-btn class="arows" @click="step = 3" color="primary" label="siguiente" icon="arrow_back_ios" flat></q-btn>
             <q-space></q-space>
-            <q-btn @click="step = 5" color="primary" icon="arrow_downward" flat rounded></q-btn>
+            <q-btn class="arows" @click="step = 5" color="primary" label="siguiente" right-icon="arrow_forward_ios" flat></q-btn>
           </q-stepper-navigation>
         </q-step>
         <q-btn-dropdown
@@ -194,14 +256,15 @@
           </q-input>
         </q-form>
           <q-stepper-navigation class="flex">
-            <q-btn @click="step = 4" color="primary" icon="arrow_upward" flat rounded></q-btn>
+            <q-btn class="arrows" @click="step = 4" color="primary" label="atrás" icon="arrow_back_ios" flat></q-btn>
             <q-space></q-space>
-            <q-btn @click="step = 6" color="primary" icon="arrow_downward" flat rounded></q-btn>
+            <q-btn class="arrows" @click="step = 6" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
           </q-stepper-navigation>
         </q-step>
         <q-step
         :name="6"
-        :title="order.motor.frame != null? `Marco: ${order.motor.frame}`: 'Selecciona Marco'"
+        :title="'Selecciona Marco'"
+        :caption="order.motor.frame != null? `${order.motor.frame}` : ''"
         prefix="6"
         :done="step > 6"
         >
@@ -212,20 +275,20 @@
           inline
           ></q-option-group>
           <q-stepper-navigation class="flex">
-            <q-btn @click="step = 5" color="primary" icon="arrow_upward" flat rounded></q-btn>
+            <q-btn class="arrows" @click="step = 5" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
             <q-space></q-space>
-            <q-btn @click="step = 7" color="primary" icon="arrow_downward" flat rounded></q-btn>
+            <q-btn class="arrows" @click="step = 7" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
           </q-stepper-navigation>
         </q-step>
         <q-step
         :name="7"
-        :title="order.variant != null? `Modelo: `: 'Seleccione modelo y color'"
+        :title="'Seleccione modelo y color'"
+        :caption="`${order.variant != null ? $store.getters.getVariant(order.variant, order.type).name : ''}${order.color != null ? ' - '+order.color.color : '' }`"
         prefix="7"
         :done="step > 7"
         >
           <q-select
           behavior="menu"
-          :rules="[ val => val || 'Requerido']"
           :options="models"
           :dense="true"
           :options-dense="true"
@@ -253,22 +316,24 @@
               </q-item>
             </template>
         </q-select>
-        <q-img
-        v-if="order.variant != null"
-        :src="`https://rollux.com.mx/img/modelos/medium/${order.type}/${order.manufacturer}/${$store.getters.getVariant(order.variant, order.type).image}.jpg`"
-        style="height: 100px; max-width: 100%"
-        >
-          <template v-slot:error>
-            <q-img
-            :src="`https://rollux.com.mx/img/modelos/medium-unavailable.jpg`"
-            style="height: 100px; width: 100%"
-            ></q-img>
-          </template>
-        </q-img>
+         <q-card v-if="order.color != null" class="q-pa-xs" style="width: 100px;margin: auto">
+          <q-img
+          v-if="order.variant != null"
+          :src="`https://rollux.com.mx/img/modelos/medium/${order.type}/${order.manufacturer}/${$store.getters.getVariant(order.variant, order.type).image}.jpg`"
+          style="height: 100px; max-width: 100%"
+          >
+            <template v-slot:error>
+              <q-img
+              :src="`https://rollux.com.mx/img/modelos/medium-unavailable.jpg`"
+              style="height: 100px; width: 100%"
+              ></q-img>
+            </template>
+          </q-img>
+        </q-card>
         <q-stepper-navigation class="flex">
-          <q-btn @click="step = 6" color="primary" icon="arrow_upward" flat rounded></q-btn>
+          <q-btn class="arrows" @click="step = 6" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
           <q-space></q-space>
-          <q-btn @click="step = 8" color="primary" icon="arrow_downward" flat rounded></q-btn>
+          <q-btn class="arrows" @click="step = 8" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
         </q-stepper-navigation>
       </q-step>
       <q-step
@@ -278,17 +343,16 @@
       :done="step > 8"
       >
         <q-stepper-navigation class="flex justify-center">
-           <q-btn @click="step = 7" color="primary" label="atrás" flat rounded></q-btn>
-          <q-btn label="TERMINAR PERSIANA" @click="addBlind()" color="orange"></q-btn>
-          <!-- <q-btn color="green" label="REALIZAR PEDIDO"></q-btn>
-          <q-btn color="green" outline label="GUARDAR COTIZACIÓN"></q-btn> -->
+           <q-btn class="arrows" @click="step = 7" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
+          <q-btn label="TERMINAR PERSIANA" @click="addBlind()" size="sm" color="orange"></q-btn>
         </q-stepper-navigation>
       </q-step>
       </div>
       <div v-else-if="order.type === 'celular'">
         <q-step
         :name="2"
-        :title="order.celular_type != null?`Persiana celular: ${order.celular_type}`:'Selecciona el tipo de persiana celular que quieres'"
+        :title="'Selecciona el tipo de persiana celular que quieres'"
+        :caption="order.celular_type != null?`${order.celular_type}`:''"
         prefix="2"
         :done="step > 2">
           <q-item
@@ -309,109 +373,59 @@
             </q-item-section>
           </q-item>
         <q-stepper-navigation class="flex">
-          <q-btn @click="step = 1" color="primary" icon="arrow_upward" flat rounded></q-btn>
+          <q-btn class="arrows" @click="step = 1" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
           <q-space></q-space>
-          <q-btn v-if="order.celular_type != null" @click="step = 3" color="primary" icon="arrow_downward" flat rounded></q-btn>
+          <q-btn class="arrows" v-if="order.celular_type != null" @click="step = 3" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
         </q-stepper-navigation>
       </q-step>
-      <q-btn-dropdown
-      v-if="order.canvas[0].height != null"
-      size="sm"
-      class="bg-primary"
-      flat
-      :label="`Lienzos ${order.canvas.length}`"
-      rounded
-      color="white"
-      no-icon-animation
-      style="position: absolute;right: 30px;margin-top: 10px;z-index: 2;"
-      >
-        <q-list dense>
-          <q-item v-for="(canvas, index) in order.canvas" :key="index">
-            <q-item-section avatar>
-              <q-avatar size="sm" color="primary"  text-color="white">{{ index + 1 }}</q-avatar>
-            </q-item-section>
-            <q-item-section>
-              <q-item-label caption>
-                Ancho: {{ canvas.width }}m
-              </q-item-label>
-              <q-item-label caption>
-                Alto: {{ canvas.height }}m
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </q-btn-dropdown>
       <q-step
         :name="3"
-        title="Selecciona las medidas"
+        :title="'Selecciona modo de accionamiento'"
+        :caption="order.celular_drive != null?`${order.celular_drive}`:''"
         prefix="3"
         :done="step > 3">
-          <q-form ref="sizecelularform">
-            <q-input
-            stack-label
-            dense
-            label-slot
-            type="number"
-            v-model.number="order.canvas[0].width"
-            :rules="[
-              ...widthCelularRules(),
-            ]"
-            rounded
-            outlined>
-              <template v-slot:label>
-                <em class="q-px-sm bg-deep-orange-5 text-white rounded-borders">
-                  Ancho de {{ widthMargins }} metros
-                </em>
-              </template>
-            </q-input>
-            <q-input
-            stack-label
-            label-slot
-            type="number"
-            :dense="true"
-            v-model.number="order.canvas[0].height"
-            :rules="[
-              ...heightCelularRules(),
-            ]"
-            rounded
-            style="min-width: 255px"
-            outlined>
-              <template v-slot:label>
-                  <em class="q-px-sm bg-deep-orange-5 text-white rounded-borders">
-                    Alto de {{ heightMargins }} metros
-                  </em>
-                </template>
-              </q-input>
-        </q-form>
-        <q-stepper-navigation class="flex">
-          <q-btn @click="step = 2" color="primary" icon="arrow_upward" flat rounded></q-btn>
+          <q-option-group
+          v-model="order.celular_drive"
+          :options="celular_drive_options"
+          color="primary"
+          inline
+          ></q-option-group>
+          <q-stepper-navigation class="flex">
+            <q-btn class="arrows" @click="step = 2" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
+            <q-space></q-space>
+            <q-btn class="arrows" v-if="order.celular_drive != null" @click="order.celular_drive == 'Muelle' ? step = 5 : step = 4" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
+          </q-stepper-navigation>
+        <!-- <q-stepper-navigation class="flex">
+          <q-btn class="arrows" @click="step = 2" color="primary" label="anteior" icon="arrow_back_ios" flat></q-btn>
           <q-space></q-space>
-          <q-btn v-if="order.canvas[0].height > 0" @click="checkCelularSize" color="primary" icon="arrow_downward" flat rounded></q-btn>
-        </q-stepper-navigation>
+          <q-btn class="arrows" v-if="order.canvas[0].height > 0" @click="checkCelularSize" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
+        </q-stepper-navigation> -->
       </q-step>
-      <q-step
+      <!-- <q-step
       :name="4"
-      :title="order.celular_drive != null?`Accionamiento: ${order.celular_drive}`:'Selecciona modo de accionamiento'"
+      :title="'Seleccione el lado del mando o motor'"
+      :caption="order.celular_drive != null?`${order.celular_drive}`:''"
       prefix="4"
       :done="step > 4">
-        <q-option-group
+      <q-option-group
         v-model="order.celular_drive"
         :options="celular_drive_options"
         color="primary"
         inline
         ></q-option-group>
         <q-stepper-navigation class="flex">
-          <q-btn @click="step = 3" color="primary" icon="arrow_upward" flat rounded></q-btn>
+          <q-btn class="arrows" @click="step = 3" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
           <q-space></q-space>
-          <q-btn v-if="order.celular_drive != null" @click="step = 5" color="primary" icon="arrow_downward" flat rounded></q-btn>
+          <q-btn class="arrows" v-if="order.celular_drive != null" @click="step = 5" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
         </q-stepper-navigation>
-      </q-step>
+      </q-step> -->
         <q-step
         v-if="order.celular_drive === 'Cordón' || order.celular_drive === 'Motor'"
-        :name="5"
-        :title="order.motor.side_control != null?`Lado del mando o motor: ${order.motor.side_control}`:'Selecciona lado del mando o motor'"
-        prefix="5"
-        :done="step > 5">
+        :name="4"
+        :title="'Selecciona lado del mando o motor'"
+        :caption="order.motor.side_control != null ? `${order.motor.side_control}` : ''"
+        prefix="4"
+        :done="step > 4">
           <q-option-group
           v-model="order.motor.side_control"
           :options="motor_sidecontrol_options"
@@ -419,24 +433,25 @@
           inline
           ></q-option-group>
           <q-stepper-navigation class="flex">
-            <q-btn @click="step = 4" color="primary" icon="arrow_upward" flat rounded></q-btn>
+            <q-btn class="arrows" @click="step = 3" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
             <q-space></q-space>
-            <q-btn v-if="order.celular_drive != null" @click="step = 6" color="primary" icon="arrow_downward" flat rounded></q-btn>
+            <q-btn class="arrows" v-if="order.celular_drive != null" @click="step = 5" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
           </q-stepper-navigation>
         </q-step>
         <q-step
         v-if="order.celular_drive === 'Cordón' || order.celular_drive === 'Motor'"
-        :name="6"
-        :title="order.celular_variant != null?`Modelo: ${order.celular_variant.title}`:'Seleccione modelo y color'"
-        prefix="6"
-        :done="step > 6">
+        :name="5"
+        :title="'Seleccione modelo y color'"
+        :caption="order.celular_variant != null?`${order.celular_variant.title}` : order.variant"
+        prefix="5"
+        :done="step > 5">
         <div v-if="order.celular_type === 'Día y Noche'">
           <q-select
           behavior="menu"
           :options="celular_variants"
           :dense="true"
           :options-dense="true"
-          @input="chargeCelularColors()"
+          @input="chargeCelularColors(); findCelularPrices()"
           rounded
           outlined
           option-label="title"
@@ -451,6 +466,7 @@
           <div class="row">
             <div class="col">
               <q-select
+              dense
               stack-label
               label-slot
               behavior="menu"
@@ -461,6 +477,7 @@
               v-model="order.color"
               emit-value
               map-options
+              option-label="color"
               input-debounce="0"
               color="primary"
               label="Color Día"
@@ -471,27 +488,30 @@
                   </em>
                 </template>
               </q-select>
-              <q-img
-              v-if="order.color != null"
-              :src="`https://rollux.com.mx/img/modelos/medium/${order.type}/${order.manufacturer}/${order.color.code}.jpg`"
-              style="height: 100px; max-width: 90%"
-              >
-                <template v-slot:error>
-                  <q-img
-                  :src="`https://rollux.com.mx/img/modelos/medium-unavailable.jpg`"
-                  style="height: 100px; width: 90%"
-                  ></q-img>
-                </template>
-              </q-img>
+               <q-card v-if="order.color != null" class="q-pa-xs" style="width: 100px;margin: auto">
+                <q-img
+                :src="`https://rollux.com.mx/img/modelos/medium/${order.type}/${order.manufacturer}/${order.color.code}.jpg`"
+                style="height: 100px; max-width: 90%"
+                >
+                  <template v-slot:error>
+                    <q-img
+                    :src="`https://rollux.com.mx/img/modelos/medium-unavailable.jpg`"
+                    style="height: 100px; width: 90%"
+                    ></q-img>
+                  </template>
+                </q-img>
+              </q-card>
             </div>
             <div class="col">
               <q-select
+              dense
               stack-label
               label-slot
               behavior="menu"
               :options="colors2"
               :options-dense="true"
               rounded
+              option-label="color"
               outlined
               v-model="order.second_color"
               emit-value
@@ -505,31 +525,31 @@
                   </em>
                 </template>
               </q-select>
-              <q-img
-              v-if="order.second_color != null"
-              :src="`https://rollux.com.mx/img/modelos/medium/${order.type}/${order.manufacturer}/${order.second_color.code}.jpg`"
-              style="height: 100px; max-width: 90%"
-              >
-                <template v-slot:error>
-                  <q-img
-                  :src="`https://rollux.com.mx/img/modelos/medium-unavailable.jpg`"
-                  style="height: 100px; width: 90%"
-                  ></q-img>
-                </template>
-              </q-img>
+              <q-card v-if="order.second_color != null" class="q-pa-xs" style="width: 100px;margin: auto">
+                <q-img
+                :src="`https://rollux.com.mx/img/modelos/medium/${order.type}/${order.manufacturer}/${order.second_color.code}.jpg`"
+                style="height: 100px; max-width: 90%"
+                >
+                  <template v-slot:error>
+                    <q-img
+                    :src="`https://rollux.com.mx/img/modelos/medium-unavailable.jpg`"
+                    style="height: 100px; width: 90%"
+                    ></q-img>
+                  </template>
+                </q-img>
+              </q-card>
             </div>
           </div>
         </div>
-        <div v-if="order.celular_type === 'Muelle/Cordón'">
+        <div v-if="order.celular_type === 'Normal'">
         <q-select
           behavior="menu"
-          :rules="[ val => val || 'Requerido']"
           :options="models"
           :dense="true"
           :options-dense="true"
           rounded
           outlined
-          @input="chargeColors"
+          @input="chargeColors(); findCelularPrices()"
           option-value="slug"
           option-label="name"
           v-model="order.variant"
@@ -584,15 +604,92 @@
         </q-img>
         </div>
           <q-stepper-navigation class="flex">
-            <q-btn @click="step = 5" color="primary" icon="arrow_upward" flat rounded></q-btn>
+            <q-btn class="arrows" @click="step = 4" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
             <q-space></q-space>
-            <q-btn v-if="order.color != null" @click="step = 7" color="primary" icon="arrow_downward" flat rounded></q-btn>
+            <q-btn class="arrows" v-if="order.color != null" @click="step = 6" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
+          </q-stepper-navigation>
+        </q-step>
+        <q-btn-dropdown
+        v-if="order.canvas[0].height != null && order.celular_drive != 'Muelle'"
+        size="sm"
+        class="bg-primary"
+        flat
+        :label="`Lienzos ${order.canvas.length}`"
+        rounded
+        color="white"
+        no-icon-animation
+        style="position: absolute;right: 30px;margin-top: 10px;z-index: 2;"
+        >
+          <q-list dense>
+            <q-item v-for="(canvas, index) in order.canvas" :key="index">
+              <q-item-section avatar>
+                <q-avatar size="sm" color="primary"  text-color="white">{{ index + 1 }}</q-avatar>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label caption>
+                  Ancho: {{ canvas.width }}m
+                </q-item-label>
+                <q-item-label caption>
+                  Alto: {{ canvas.height }}m
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+        <q-step
+        v-if="order.celular_drive === 'Cordón' || order.celular_drive === 'Motor'"
+        :name="6"
+        :title="'Selecciona Medidas'"
+        prefix="6"
+        :done="step > 6">
+          <q-form ref="sizecelularform">
+            <q-input
+            stack-label
+            dense
+            label-slot
+            type="number"
+            v-model.number="order.canvas[0].width"
+            :rules="[
+              ...widthCelularRules(order.celular_type),
+            ]"
+            rounded
+            outlined>
+              <template v-slot:label>
+                <em class="q-px-sm bg-deep-orange-5 text-white rounded-borders">
+                  Ancho de {{ widthCelularMargins }} metros
+                </em>
+              </template>
+            </q-input>
+            <q-input
+            stack-label
+            label-slot
+            type="number"
+            :dense="true"
+            v-model.number="order.canvas[0].height"
+            :rules="[
+              ...heightCelularRules(order.celular_type),
+            ]"
+            rounded
+            style="min-width: 255px"
+            outlined>
+              <template v-slot:label>
+                  <em class="q-px-sm bg-deep-orange-5 text-white rounded-borders">
+                    Alto de {{ heightCelularMargins }} metros
+                  </em>
+                </template>
+              </q-input>
+          </q-form>
+          <q-stepper-navigation class="flex">
+            <q-btn class="arrows" @click="step = 5" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
+            <q-space></q-space>
+            <q-btn class="arrows" v-if="order.canvas[0].height != null" @click="step = 7" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
           </q-stepper-navigation>
         </q-step>
         <q-step
         v-if="order.celular_drive === 'Cordón' || order.celular_drive === 'Motor'"
         :name="7"
-        :title="order.motor.frame != null? `Marco: ${order.motor.frame}`: 'Selecciona Marco'"
+        :title="'Selecciona Marco'"
+        :caption="order.motor.frame != null? `${order.motor.frame}`: ''"
         prefix="7"
         :done="step > 7">
           <q-option-group
@@ -602,9 +699,9 @@
           inline
           ></q-option-group>
           <q-stepper-navigation class="flex">
-            <q-btn @click="step = 6" color="primary" icon="arrow_upward" flat rounded></q-btn>
+            <q-btn class="arrows" @click="step = 6" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
             <q-space></q-space>
-            <q-btn v-if="order.motor.frame != null" @click="step = 8" color="primary" icon="arrow_downward" flat rounded></q-btn>
+            <q-btn class="arrows" v-if="order.motor.frame != null" @click="step = 8" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
           </q-stepper-navigation>
         </q-step>
         <q-step
@@ -614,8 +711,8 @@
         prefix="8"
         :done="step > 8">
           <q-stepper-navigation class="flex">
-            <q-btn @click="step = 6" color="primary" label="atrás" flat rounded></q-btn>
-            <q-btn label="TERMINAR PERSIANA" @click="addBlind()" color="orange"></q-btn>
+            <q-btn class="arrows" @click="step = 7" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
+            <q-btn label="TERMINAR PERSIANA" @click="addBlind()" size="sm" color="orange"></q-btn>
           </q-stepper-navigation>
         </q-step>
         <q-step
@@ -646,7 +743,7 @@
           <q-select
           clearable
           behavior="menu"
-          :options="controls"
+          :options="controls.filter( c => c.channel == '1' || c.channel == '6')"
           :dense="true"
           :options-dense="true"
           option-label="description"
@@ -662,9 +759,9 @@
           lazy-rules>
           </q-select>
          <q-stepper-navigation class="flex">
-            <q-btn @click="step = 7" color="primary" icon="arrow_upward" flat rounded></q-btn>
+            <q-btn class="arrows" @click="step = 7" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
             <q-space></q-space>
-            <q-btn  @click="step = 9" color="primary" icon="arrow_downward" flat rounded></q-btn>
+            <q-btn class="arrows"  @click="step = 9" color="primary" label="siguiente" icon="arrow_forward_ios" flat></q-btn>
           </q-stepper-navigation>
         </q-step>
          <q-step
@@ -674,26 +771,26 @@
         prefix="9"
         :done="step > 9">
           <q-stepper-navigation class="flex">
-            <q-btn @click="step = 8" color="primary" label="atrás" flat rounded></q-btn>
-            <q-btn label="TERMINAR PERSIANA" @click="addBlind()" color="orange"></q-btn>
+            <q-btn class="arrows" @click="step = 8" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
+            <q-btn label="TERMINAR PERSIANA" @click="addBlind()" size="sm" color="orange"></q-btn>
           </q-stepper-navigation>
         </q-step>
         <q-step
         v-if="order.celular_drive === 'Muelle'"
         :name="5"
-        :title="order.celular_variant != null?`Modelo: ${order.celular_variant.title}`:'Seleccione modelo y color'"
+        :title="'Seleccione modelo y color'"
+        :caption="order.celular_variant != null?`${order.celular_variant.title}` : order.variant"
         prefix="5"
         :done="step > 5">
-          <div v-if="order.celular_type === 'Muelle/Cordón'">
+          <div v-if="order.celular_type === 'Normal'">
           <q-select
           behavior="menu"
-          :rules="[ val => val || 'Requerido']"
           :options="models"
           :dense="true"
           :options-dense="true"
           rounded
           outlined
-          @input="chargeColors"
+          @input="chargeColors(); findCelularPrices()"
           option-value="slug"
           option-label="name"
           v-model="order.variant"
@@ -734,18 +831,20 @@
           style="padding: 10px 0px"
           lazy-rules>
           </q-select>
-          <q-img
-          v-if="order.color != null"
-          :src="`https://rollux.com.mx/img/modelos/medium/${order.type}/${order.manufacturer}/${order.color.code}.jpg`"
-          style="height: 100px; max-width: 100%"
-          >
-          <template v-slot:error>
-              <q-img
-              :src="`https://rollux.com.mx/img/modelos/medium-unavailable.jpg`"
-              style="height: 100px; width: 100%"
-              ></q-img>
-          </template>
-        </q-img>
+           <q-card v-if="order.color != null" class="q-pa-xs" style="width: 100px;margin: auto">
+            <q-img
+            v-if="order.color != null"
+            :src="`https://rollux.com.mx/img/modelos/medium/${order.type}/${order.manufacturer}/${order.color.code}.jpg`"
+            style="height: 100px; max-width: 100%"
+            >
+            <template v-slot:error>
+                <q-img
+                :src="`https://rollux.com.mx/img/modelos/medium-unavailable.jpg`"
+                style="height: 100px; width: 100%"
+                ></q-img>
+            </template>
+            </q-img>
+          </q-card>
         </div>
         <div v-if="order.celular_type === 'Día y Noche'">
           <q-select
@@ -753,7 +852,7 @@
           :options="celular_variants"
           :dense="true"
           :options-dense="true"
-          @input="chargeCelularColors()"
+          @input="chargeCelularColors(); findCelularPrices()"
           rounded
           outlined
           option-label="title"
@@ -788,18 +887,20 @@
                   </em>
                 </template>
               </q-select>
-              <q-img
-              v-if="order.color != null"
-              :src="`https://rollux.com.mx/img/modelos/medium/${order.type}/${order.manufacturer}/${order.color.code}.jpg`"
-              style="height: 100px; max-width: 90%"
-              >
-                <template v-slot:error>
-                  <q-img
-                  :src="`https://rollux.com.mx/img/modelos/medium-unavailable.jpg`"
-                  style="height: 100px; width: 90%"
-                  ></q-img>
-                </template>
-              </q-img>
+               <q-card v-if="order.color != null" class="q-pa-xs" style="width: 100px;margin: auto">
+                <q-img
+                v-if="order.color != null"
+                :src="`https://rollux.com.mx/img/modelos/medium/${order.type}/${order.manufacturer}/${order.color.code}.jpg`"
+                style="height: 100px; max-width: 90%"
+                >
+                  <template v-slot:error>
+                    <q-img
+                    :src="`https://rollux.com.mx/img/modelos/medium-unavailable.jpg`"
+                    style="height: 100px; width: 90%"
+                    ></q-img>
+                  </template>
+                </q-img>
+              </q-card>
             </div>
             <div class="col">
               <q-select
@@ -823,33 +924,111 @@
                   </em>
                 </template>
               </q-select>
-              <q-img
-              v-if="order.second_color != null"
-              :src="`https://rollux.com.mx/img/modelos/medium/${order.type}/${order.manufacturer}/${order.second_color.code}.jpg`"
-              style="height: 100px; max-width: 90%"
-              >
-                <template v-slot:error>
-                  <q-img
-                  :src="`https://rollux.com.mx/img/modelos/medium-unavailable.jpg`"
-                  style="height: 100px; width: 90%"
-                  ></q-img>
-                </template>
-              </q-img>
+               <q-card v-if="order.second_color != null" class="q-pa-xs" style="width: 100px;margin: auto">
+                <q-img
+                :src="`https://rollux.com.mx/img/modelos/medium/${order.type}/${order.manufacturer}/${order.second_color.code}.jpg`"
+                style="height: 100px; max-width: 90%"
+                >
+                  <template v-slot:error>
+                    <q-img
+                    :src="`https://rollux.com.mx/img/modelos/medium-unavailable.jpg`"
+                    style="height: 100px; width: 90%"
+                    ></q-img>
+                  </template>
+                </q-img>
+              </q-card>
             </div>
           </div>
         </div>
           <q-stepper-navigation class="flex">
-            <q-btn @click="step = 4" color="primary" icon="arrow_upward" flat rounded></q-btn>
+            <q-btn class="arrows" @click="step = 3" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
             <q-space></q-space>
-            <q-btn v-if="order.color != null" @click="step = 6" color="primary" icon="arrow_downward" flat rounded></q-btn>
+            <q-btn class="arrows" v-if="order.color != null" @click="step = 6" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
+          </q-stepper-navigation>
+        </q-step>
+        <q-btn-dropdown
+        v-if="order.canvas[0].height != null"
+        size="sm"
+        class="bg-primary"
+        flat
+        :label="`Lienzos ${order.canvas.length}`"
+        rounded
+        color="white"
+        no-icon-animation
+        style="position: absolute;right: 30px;margin-top: 10px;z-index: 2;"
+        >
+          <q-list dense>
+            <q-item v-for="(canvas, index) in order.canvas" :key="index">
+              <q-item-section avatar>
+                <q-avatar size="sm" color="primary"  text-color="white">{{ index + 1 }}</q-avatar>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label caption>
+                  Ancho: {{ canvas.width }}m
+                </q-item-label>
+                <q-item-label caption>
+                  Alto: {{ canvas.height }}m
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+        <q-step
+        v-if="order.celular_drive === 'Muelle'"
+        :name="6"
+        :title="'Seleccione Medidas'"
+        prefix="6"
+        :done="step > 6">
+          <q-form ref="sizecelularform">
+            <q-input
+            stack-label
+            dense
+            label-slot
+            type="number"
+            v-model.number="order.canvas[0].width"
+            :rules="[
+              ...widthCelularRules(order.celular_type),
+            ]"
+            rounded
+            outlined>
+              <template v-slot:label>
+                <em class="q-px-sm bg-deep-orange-5 text-white rounded-borders">
+                  Ancho de {{ widthCelularMargins }} metros
+                </em>
+              </template>
+            </q-input>
+            <q-input
+            stack-label
+            label-slot
+            type="number"
+            :dense="true"
+            v-model.number="order.canvas[0].height"
+            :rules="[
+              ...heightCelularRules(order.celular_type),
+            ]"
+            rounded
+            style="min-width: 255px"
+            outlined>
+              <template v-slot:label>
+                  <em class="q-px-sm bg-deep-orange-5 text-white rounded-borders">
+                    Alto de {{ heightCelularMargins }} metros
+                  </em>
+                </template>
+              </q-input>
+          </q-form>
+          <q-stepper-navigation class="flex">
+            <q-btn class="arrows" @click="step = 5" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
+            <q-space></q-space>
+            <q-btn class="arrows" v-if="order.canvas[0].height != null" @click="step = 7" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
           </q-stepper-navigation>
         </q-step>
         <q-step
         v-if="order.celular_drive === 'Muelle'"
-        :name="6"
-        :title="order.motor.frame != null? `Marco: ${order.motor.frame}`: 'Selecciona Marco'"
-        prefix="6"
-        :done="step > 6">
+        :name="7"
+        :title="'Selecciona Marco'"
+        :caption="order.motor.frame != null ? `${order.motor.frame}` : ''"
+        prefix="7"
+        :done="step > 7">
           <q-option-group
           v-model="order.motor.frame"
           :options="motor_frame_options"
@@ -857,27 +1036,28 @@
           inline
           ></q-option-group>
           <q-stepper-navigation class="flex">
-            <q-btn @click="step = 5" color="primary" icon="arrow_upward" flat rounded></q-btn>
+            <q-btn class="arrows" @click="step = 6" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
             <q-space></q-space>
-            <q-btn v-if="order.motor.frame != null" @click="step = 7" color="primary" icon="arrow_downward" flat rounded></q-btn>
+            <q-btn class="arrows" v-if="order.motor.frame != null" @click="step = 8" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
           </q-stepper-navigation>
         </q-step>
         <q-step
         v-if="order.celular_drive === 'Muelle'"
-        :name="7"
+        :name="8"
         title="Últimas opciones"
-        prefix="7"
-        :done="step > 7">
+        prefix="8"
+        :done="step > 8">
           <q-stepper-navigation class="flex">
-            <q-btn @click="step = 6" color="primary" label="atrás" flat rounded></q-btn>
-            <q-btn label="TERMINAR PERSIANA" @click="addBlind()" color="orange"></q-btn>
+            <q-btn class="arrows" @click="step = 7" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
+            <q-btn label="TERMINAR PERSIANA"  @click="addBlind()" size="sm" color="orange"></q-btn>
           </q-stepper-navigation>
         </q-step>
       </div>
       <div v-else>
       <q-step
       :name="2"
-      :title="order.variant != null ?`TEJIDO: ${order.line} MODELO: ${$store.getters.getVariant(order.variant, order.type).name}`:'Selecciona modelo'"
+      :caption="`${order.line != null ? order.line.replace(/-/gi,' ').toUpperCase() : '' }${order.variant != null ? ' - '+$store.getters.getVariant(order.variant, order.type).name : ''}`"
+      title="Selecciona modelo"
       prefix="2"
       :done="step > 2"
       >
@@ -897,7 +1077,7 @@
         input-debounce="0"
         color="primary"
         style="padding: 10px 0px"
-        label="Seleccione tejido"
+        label="Seleccione Material"
         lazy-rules
         ></q-select>
         <q-option-group
@@ -938,14 +1118,14 @@
         </template>
         </q-select>
         <q-stepper-navigation class="flex">
-          <q-btn @click="step = 1" color="primary" icon="arrow_upward" flat rounded></q-btn>
-          <q-space></q-space>
-          <q-btn v-if="order.color != null" @click="step = 3" color="primary" icon="arrow_downward" flat rounded></q-btn>
+          <q-btn class="arrows" @click="step = 1" color="primary" icon="arrow_back_ios" label="anterior"  flat></q-btn>
+          <q-btn class="arrows" v-if="order.variant != null" @click="step = 3" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
         </q-stepper-navigation>
       </q-step>
       <q-step
       :name="3"
-      :title="order.color != null ?`COLOR: ${order.color.color} `:'Selecciona color'"
+      :caption="`${order.color != null ? order.color.color : ''}`"
+      title="Selecciona color"
       prefix="3"
       :done="step > 3"
       >
@@ -968,34 +1148,48 @@
         style="padding: 10px 0px"
         lazy-rules>
         </q-select>
+        <q-card v-if="order.color != null" class="q-pa-xs" style="width: 200px;margin: auto">
         <q-img
-        v-if="order.type === 'horizontal-aluminio-1' && order.variant != null"
+        v-if="(order.type === 'horizontal-aluminio-1' || order.type === 'horizontal-aluminio-2' || order.type === 'horizontal-madera-2') && order.variant != null"
         :src="`https://rollux.com.mx/img/modelos/medium/${order.type}/${order.manufacturer}/${$store.getters.getVariant(order.variant, order.type).image}.jpg`"
-        style="height: 100px; max-width: 100%"
+        style="height: 200px; max-width: 100%"
         >
         <template v-slot:error>
             <q-img
             :src="`https://rollux.com.mx/img/modelos/medium-unavailable.jpg`"
-            style="height: 100px; width: 100%"
+            style="height: 200px; width: 100%"
+            ></q-img>
+          </template>
+        </q-img>
+        <q-img
+        v-else-if="order.color"
+        :src=" `https://rollux.com.mx/img/modelos/medium/${order.type}/${$store.getters.getVariant(order.variant, order.type).line.slug}/${order.color.code}.jpg`"
+        style="height: 200px; max-width: 100%"
+        >
+        <template v-slot:error>
+            <q-img
+            :src="`https://rollux.com.mx/img/modelos/medium-unavailable.jpg`"
+            style="height: 200px; width: 100%"
             ></q-img>
           </template>
         </q-img>
         <q-img
         v-else-if="order.color != null"
         :src="`https://rollux.com.mx/img/modelos/medium/${order.type}/${order.manufacturer}/${order.color.code}.jpg`"
-        style="height: 100px; max-width: 100%"
+        style="height: 180px; max-width: 100%"
         >
           <template v-slot:error>
             <q-img
             :src="`https://rollux.com.mx/img/modelos/medium-unavailable.jpg`"
-            style="height: 100px; width: 100%"
+            style="height: 180px; width: 100%"
             ></q-img>
           </template>
         </q-img>
+        </q-card>
         <q-stepper-navigation class="flex">
-          <q-btn @click="step = 2" color="primary" icon="arrow_upward" flat rounded></q-btn>
+          <q-btn class="arrows" @click="step = 2" color="primary" label="anterior" icon="arrow_back_ios" flat rounded></q-btn>
           <q-space></q-space>
-          <q-btn @click="step = 4" color="primary" icon="arrow_downward" flat rounded></q-btn>
+          <q-btn class="arrows" @click="step = 4" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat rounded></q-btn>
         </q-stepper-navigation>
       </q-step>
       <q-btn-dropdown
@@ -1110,17 +1304,18 @@
           </div>
         </q-form>
         <q-stepper-navigation class="flex">
-          <q-btn @click="step = 3" color="primary" icon="arrow_upward" flat rounded></q-btn>
+          <q-btn class="arrows" @click="step = 3" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
          <q-space></q-space>
-          <q-btn size="sm" stretch color="primary" @click="canvasDialog = true" v-if="showButtonDialog" label="agregar más lienzos" ></q-btn>
+          <q-btn  size="sm" stretch color="primary" @click="canvasDialog = true" v-if="showButtonDialog" label="agregar más lienzos" ></q-btn>
           <q-space></q-space>
-          <q-btn @click="checkSizes()" color="primary" icon="arrow_downward" flat rounded></q-btn>
+          <q-btn class="arrows" @click="checkSizes()" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
         </q-stepper-navigation>
       </q-step>
       <q-step
       v-if="order.type == 'sheer' || order.type == 'triple-shade-shangri-la' || order.type == 'romantic'"
       :name="5"
-      :title="order.instalation_side != null? `Instalación a: ${order.instalation_side}` : 'Selecciona tipo de instalación'"
+      title="Selecciona tipo de instalación"
+      :caption="order.instalation_side != null? `Instalación a: ${order.instalation_side}`:''"
       prefix="5"
       :done="step > 5"
       >
@@ -1131,17 +1326,19 @@
         inline
         ></q-option-group>
         <q-stepper-navigation class="flex">
-          <q-btn @click="step = 4" color="primary" icon="arrow_upward" flat rounded></q-btn>
+          <q-btn class="arrows" @click="step = 4" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
           <q-space></q-space>
-          <q-btn @click="step = 6" color="primary" icon="arrow_downward" flat rounded></q-btn>
+          <q-btn class="arrows" @click="step = 6" color="primary" label="siguiente" icon-right="arrow_forward_ios" flat></q-btn>
         </q-stepper-navigation>
       </q-step>
       <q-step
       :name="6"
-      :title="order.motor_type != null? `Accionamiento: ${order.motor_type}` : 'Selecciona Accionamiento'"
+      title="Selecciona Accionamiento"
+      :caption="order.motor_type != null? `${order.motor_type}` :''"
       prefix="6"
       :done="step > 6"
       >
+      <q-input rounded outlined dense v-model.number="order.installmentCharge" prefix="$" label="Cargo por instalación"></q-input>
       <q-list separator>
         <q-item
         @click="checkDrive(option.value)"
@@ -1156,63 +1353,19 @@
           </q-item-section>
         </q-item>
       </q-list>
-        <!-- <q-option-group
-        @click="checkDrive()"
-        v-model="order.motor_type"
-        :options="motor_type_options"
-        color="primary"
-        inline
-        ></q-option-group> -->
         <q-stepper-navigation class="flex">
-          <q-btn @click="motorTypeBack" color="primary" icon="arrow_upward" flat rounded></q-btn>
-          <q-space></q-space>
-          <q-btn @click="addBlind()" color="orange" :label="finishTitle" flat rounded></q-btn>
+          <q-btn @click="motorTypeBack" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
+
+          <q-btn @click="addBlind()" color="orange" :label="finishTitle" flat size="sm" rounded></q-btn>
         </q-stepper-navigation>
       </q-step>
       </div>
     </q-stepper>
     <q-footer>
-      <q-tabs v-model="tab" class="text-white" :mobile-arrows="false" :outside-arrows="false" :narrow-indicator="false">
-        <q-tab>
-          <div
-          v-if="order.type == 'horizontal-madera-2'"
-          style="font-size: 1em !important;line-height: normal;" >
-            PERSIANA: {{ mxCurrencyFormat.format(findWoodPrice) }} MXN
-          </div>
-          <div
-          v-else
-          style="font-size: 1em !important;line-height: normal;" >
-            PERSIANA:  {{ mxCurrencyFormat.format(unitaryPrice + parseFloat(extraEnrollablePrice) + parseFloat(extraVerticalPrice)) }} MXN
-          </div>
-          <div v-if="order.celular_variant != null">
-            MOTOR:
-            {{
-              mxCurrencyFormat.format(motorCelularPrice())
-            }}
-            MXN
-          </div>
-          <div v-else>
-            MOTOR:
-            {{
-              mxCurrencyFormat.format(
-                order.motor.price +
-                order.motor.flexiballetPrice +
-                order.motor.galleryPrice +
-                order.motor.manufacturerPrice +
-                order.motor.stringPrice
-              )
-            }}
-            MXN
-          </div>
-        </q-tab>
-        <q-route-tab :to="{name:'Quoted'}">
-          <!-- <q-badge color="red" floating>{{ $store.state.orders.orders.length }} </q-badge> -->
-          TOTAL:
-          <div style="font-size: 1em !important;line-height: normal;" >
-              {{mxCurrencyFormat.format($store.getters.totalPrice) }} MXN
-          </div>
-        </q-route-tab>
-      </q-tabs>
+       <q-toolbar>
+          <img width="64px" src="statics/img/white-r.png" />
+          <q-toolbar-title style="font-size: 16px">TOTAL: {{mxCurrencyFormat.format($store.getters.totalPrice) }} MXN</q-toolbar-title>
+        </q-toolbar>
     </q-footer>
     <q-dialog v-model="canvasDialog" persistent transition-show="scale" transition-hide="scale">
       <q-card class="text-primary">
@@ -1307,11 +1460,40 @@ import woodMotorized from 'src/utils/woodMatrixTwo'
 export default {
   data () {
     return {
+      maxCelularHeight: 0,
+      minCelularHeight: 0,
+      maxCelularWidth: 0,
+      minCelularWidth: 0,
+      widthCelularMargins: null,
+      heightCelularMargins: null,
+      celularPosibilities: [
+        { name: 'ronoco', v: 'romance-noite', t: 'Normal', d: 'Cordón' },
+        { name: 'ronoco', v: 'romance-noite', t: 'Normal', d: 'Motor' },
+        { name: 'rotrmu', v: 'romance-traslucida', t: 'Normal', d: 'Muelle' },
+        { name: 'rotrco', v: 'romance-traslucida', t: 'Normal', d: 'Cordón' },
+        { name: 'rotrco', v: 'romance-traslucida', t: 'Normal', d: 'Motor' },
+        { name: 'ronomu', v: 'romance-traslucida', t: 'Normal', d: 'Muelle' },
+        { name: 'rodnco', v: 'romance', t: 'Día y Noche', d: 'Cordón' },
+        { name: 'rodnco', v: 'romance', t: 'Día y Noche', d: 'Motor' },
+        { name: 'rodnmu', v: 'romance', t: 'Día y Noche', d: 'Muelle' },
+        { name: 'bonoco', v: 'bolero-traslucida', t: 'Normal', d: 'Cordón' },
+        { name: 'bonoco', v: 'bolero-traslucida', t: 'Normal', d: 'Motor' },
+        { name: 'bonomu', v: 'bolero-traslucida', t: 'Normal', d: 'Muelle' },
+        { name: 'botrco', v: 'bolero-traslucida', t: 'Normal', d: 'Cordón' },
+        { name: 'botrco', v: 'bolero-traslucida', t: 'Normal', d: 'Motor' },
+        { name: 'botrmu', v: 'bolero-traslucida', t: 'Normal', d: 'Muelle' },
+        { name: 'bodnco', v: 'bolero', t: 'Día y Noche', d: 'Cordón' },
+        { name: 'bodnco', v: 'bolero', t: 'Día y Noche', d: 'Motor' },
+        { name: 'bodnmu', v: 'bolero', t: 'Día y Noche', d: 'Muelle' },
+        { name: 'sonocm', v: 'solis', t: 'Normal' },
+        { name: 'sodncm', v: 'solis', t: 'Día y Noche' }
+      ],
+      isQuotationFinished: false,
       editable: this.isEditing,
       celular_variants: [
-        { title: 'CELULAR BOLERO 25 MM (3.66 MM)', day: 'BOLERO TRASLUCIDA', night: 'BOLERO BLACKOUT' },
-        { title: 'CELULAR ROMANCE 25 MM (3.66 MM)', day: 'ROMANCE TRASLUCIDA', night: 'ROMANCE BLACKOUT' },
-        { title: 'CELULAR SOLIS 38 MM 118\'\' (3.00)', day: 'SOLIS TRASLUCIDA', night: 'SOLIS TRASLUCIDA' }
+        { title: 'CELULAR BOLERO 25 MM', day: 'bolero-traslucida', night: 'bolero-privee' },
+        { title: 'CELULAR ROMANCE 38 MM', day: 'romance-traslucida', night: 'romance-noite' },
+        { title: 'CELULAR SOLIS 38 MM', day: 'solis', night: 'solis' }
       ],
       celular_drive_options: [
         {
@@ -1329,7 +1511,7 @@ export default {
       ],
       celulares: [
         { title: 'Día y Noche', img: 'http://rollux.com.mx/img/cotizador/celulares/dianoche.png' },
-        { title: 'Muelle/Cordón', img: 'http://rollux.com.mx/img/cotizador/celulares/Muelle.png' }
+        { title: 'Normal', img: 'http://rollux.com.mx/img/cotizador/celulares/Muelle.png' }
       ],
       active: true,
       flexibaletDialog: false,
@@ -1390,7 +1572,7 @@ export default {
         {
           label: 'Manual',
           value: 'Manual',
-          icon: 'wash',
+          icon: 'pan_tool',
           disable: false
         },
         {
@@ -1430,14 +1612,35 @@ export default {
         cloth_holder: null,
         extraEnrollable: 0,
         extraVertical: 0,
+        installmentCharge: 0,
+        base_price: 0,
+        count_same_blinds: 1 || 0,
         motor: {
           height_control: null,
-          drive: null,
           side_control: null,
-          frame: null,
-          motor: null,
           price: 0,
-          control: null
+          action: null,
+          type: null,
+          canvas: 0,
+          manufacturer: null,
+          control: null,
+          motor: 0,
+          panels: 0,
+          control_color: 0,
+          selected_panel: 0,
+          string_type: null,
+          gallery: null,
+          gallery_color: null,
+          comment: null,
+          instalation_side: null,
+          frame: null,
+          rail_color: null,
+          drive: null,
+          extra: 0,
+          flexiballetPrice: 0,
+          galleryPrice: 0,
+          manufacturerPrice: 0,
+          stringPrice: 0
         }
       },
       defaultOrder: {
@@ -1461,14 +1664,35 @@ export default {
         cloth_holder: null,
         extraEnrollable: 0,
         extraVertical: 0,
+        installmentCharge: 0,
+        base_price: 0,
+        count_same_blinds: 1,
         motor: {
           height_control: null,
-          drive: null,
           side_control: null,
-          frame: null,
-          motor: null,
           price: 0,
-          control: null
+          action: null,
+          type: null,
+          canvas: 0,
+          manufacturer: null,
+          control: null,
+          motor: 0,
+          panels: 0,
+          control_color: 0,
+          selected_panel: 0,
+          string_type: null,
+          gallery: null,
+          gallery_color: null,
+          comment: null,
+          instalation_side: null,
+          frame: null,
+          rail_color: null,
+          drive: null,
+          extra: 0,
+          flexiballetPrice: 0,
+          galleryPrice: 0,
+          manufacturerPrice: 0,
+          stringPrice: 0
         }
       },
       defaultMotor: {
@@ -1504,13 +1728,70 @@ export default {
   },
   name: 'PageIndex',
   methods: {
-
+    findCelularPrices () {
+      if (this.order.celular_variant != null) {
+        console.log()
+        this.celularPosibilities.forEach(file => {
+          if (this.order.celular_type === file.t && (this.order.celular_drive === file.d || file.d === undefined) && this.order.celular_variant.day.includes(file.v)) {
+            this.$store.dispatch('getMatrix', file.name).then(res => {
+              this.widthCelularMargins = this.matrix[0].w + ' a ' + this.matrix[this.matrix.length - 1].w
+              this.heightCelularMargins = this.matrix[0].h + ' a ' + this.matrix[this.matrix.length - 1].h
+              this.minCelularHeight = this.matrix[0].h
+              this.maxCelularHeight = this.matrix[this.matrix.length - 1].h
+              this.minCelularWidth = this.matrix[0].w
+              this.maxCelularWidth = this.matrix[this.matrix.length - 1].w
+            })
+          }
+        })
+      } else if (this.order.variant != null) {
+        console.log('entro aaqui')
+        this.celularPosibilities.forEach(file => {
+          if (this.order.celular_type === file.t && (this.order.celular_drive === file.d || file.d === undefined) && this.order.variant.includes(file.v)) {
+            this.$store.dispatch('getMatrix', file.name).then(res => {
+              this.widthCelularMargins = this.matrix[0].w + ' a ' + this.matrix[this.matrix.length - 1].w
+              this.heightCelularMargins = this.matrix[0].h + ' a ' + this.matrix[this.matrix.length - 1].h
+              this.minCelularHeight = this.matrix[0].h
+              this.maxCelularHeight = this.matrix[this.matrix.length - 1].h
+              this.minCelularWidth = this.matrix[0].w
+              this.maxCelularWidth = this.matrix[this.matrix.length - 1].w
+            })
+          }
+        })
+      }
+    },
+    motorCelularPrice () {
+      let price = 0
+      if (this.order.motor.motor) {
+        if (this.order.celular_type === 'Día y Noche') {
+          this.order.motor.price = 29700
+          price += 29700
+        } else if (this.order.celular_type === 'Normal') {
+          this.order.motor.price = 26000
+          price += 26000
+        }
+      }
+      if (this.order.motor.control) {
+        if (this.order.motor.channel === '1') {
+          this.order.motor.control.price = 490
+          price += 490
+        } else if (this.order.motor.channel === '6') {
+          this.order.motor.control.price = 1480
+          price += 1480
+        }
+      }
+      return price
+    },
     addBlind () {
       if (this.order.type === 'horizontal-madera-2') {
         this.order.price = this.findWoodPrice
+        if (!isNaN(this.findWoodPrice)) {
+          this.order.base_price = this.findWoodPrice
+        }
+        this.order.base_price = this.order.price
       } else if (this.order.type === 'celular') {
-        this.order.price = this.unitaryPrice
+        this.order.price = this.findCelularPrice
         this.order.motor.price = this.motorCelularPrice()
+        this.order.base_price = this.order.price
       } else if (this.order.type === 'vertical') {
         this.order.extraVertical = this.extraVerticalPrice
         this.order.price = this.unitaryPrice
@@ -1525,6 +1806,7 @@ export default {
         this.order.motor = Object.assign({}, this.defaultMotor)
         this.order.canvas = [{ width: null, height: null }]
         this.step = 1
+        this.isQuotationFinished = true
       })
     },
 
@@ -1574,14 +1856,14 @@ export default {
       this.canvasDialog = false
     },
     chargeCelularColors () {
-      const variant1 = this.$store.state.products.variants.find(v => v.name.includes(this.order.celular_variant.day))
-      const variant2 = this.$store.state.products.variants.find(v => v.name.includes(this.order.celular_variant.night))
+      const variant1 = this.$store.state.products.variants.find(v => v.slug.includes(this.order.celular_variant.day))
+      const variant2 = this.$store.state.products.variants.find(v => v.slug.includes(this.order.celular_variant.night))
 
-      this.$store.dispatch('getRelatedColors', variant1.id).then(() => {
-        this.order.variant = variant1.id
+      this.$store.dispatch('getRelatedColors', { slug: variant1.slug, type: this.order.type }).then(() => {
+        this.order.variant = variant1.slug
       })
-      this.$store.dispatch('getRelatedColors2', variant2.id).then(() => {
-        this.order.variant2 = variant2.id
+      this.$store.dispatch('getRelatedColors2', { slug: variant2.slug, type: this.order.type }).then(() => {
+        this.order.variant2 = variant2.slug
         // this.loadingColors = false
         // this.disabledSelectColor = false
       })
@@ -1601,13 +1883,13 @@ export default {
         this.disabledSelectSize = false
         if (this.order.type === 'horizontal-aluminio-1' || this.order.type === 'horizontal-aluminio-2' || this.order.type === 'horizontal-madera-2') {
           this.order.color = this.colors[0]
-          console.log('llegó aqui')
         }
       })
     },
     chargeTypeModels (type) {
       this.order = Object.assign({}, this.defaultOrder)
       this.order.motor = Object.assign({}, this.defaultMotor)
+      this.order.canvas = [{ width: null, height: null }]
       this.order.type = type
       if (type === 'celular') {
         this.heightMargins = 1 + ' a ' + 3.00
@@ -1704,18 +1986,6 @@ export default {
     heightWoodRules () {
       return val => (!isNaN(val) && val >= 0.80 && val <= 3) || 'Requerido'
     },
-
-    motorCelularPrice () {
-      let price = 0
-      if (this.order.motor.motor) {
-        price += parseFloat(this.$store.getters.getMotor(this.order.motor.motor).price)
-      }
-      if (this.order.motor.control) {
-        price += parseFloat(this.order.motor.control.price)
-      }
-      return price
-    },
-
     motorTypeBack () {
       if (this.order.type === 'sheer' || this.order.type === 'triple-shade-shangri-la' || this.order.type === 'romantic') {
         this.step = 5
@@ -1769,11 +2039,11 @@ export default {
     },
 
     widthCelularRules () {
-      return val => (!isNaN(val) && val >= 0.60 && val <= 3) || 'Requerido'
+      return val => (val >= this.minCelularWidth && val <= this.maxCelularWidth) || 'Requerido'
     },
 
     heightCelularRules () {
-      return val => (!isNaN(val) && val >= 1 && val <= 3) || 'Requerido'
+      return val => (val >= this.minCelularHeight && val <= this.maxCelularHeight) || 'Requerido'
     }
   },
 
@@ -1784,7 +2054,8 @@ export default {
       orders: (state) => state.orders.orders,
       partial: (state) => state.orders.order,
       controls: (state) => state.motorization.controls,
-      motorizations: (state) => state.motorization.motorizations
+      motorizations: (state) => state.motorization.motorizations,
+      matrix: (state) => state.orders.matrix
     }),
     preSideControlTitle () {
       if (this.order.motor_type === 'Motorizado') {
@@ -1848,6 +2119,19 @@ export default {
         }
       }
       return result
+    },
+
+    findCelularPrice () {
+      if (this.matrix.length > 0) {
+        const result = this.matrix.find((p) => p.w >= this.order.canvas[0].width && p.h >= this.order.canvas[0].height)
+        if (result) {
+          const price = result.p
+          return price
+        } else {
+          return 0
+        }
+      }
+      return 0
     },
 
     finishTitle () {
@@ -2025,5 +2309,48 @@ export default {
 <style>
 .selected-celular-type{
   border: 1px solid #47a5ad;
+}
+
+.arrows:last-child span{
+  font-family: Montserrat-Bold;
+}
+.arrows:last-child i{
+  color: black;
+}
+
+.arrows:last-child span span{
+  font-family: Montserrat-Bold;
+}
+.arrows:last-child span i{
+  color: black;
+}
+
+.pulseBtn {
+  border-radius: 1000px;
+  box-shadow: 0 0 0 0 rgba(241, 126, 32, 0.233);
+  animation: pulse 1.75s infinite cubic-bezier(0.66, 0, 0, 1);
+}
+
+.q-tabs__content {
+    overflow: visible;
+}
+
+@keyframes pulse {
+    to {
+      box-shadow: 0 0 5px 50px rgba(241, 126, 32, 0.233);
+    }
+}
+
+.q-stepper__caption{
+  color: #47a5ad;
+}
+.q-stepper__title{
+  color: #757575;
+}
+.for-text-center div div div{
+  text-align: center;
+}
+.for-text-center div div div input{
+  text-align: center;
 }
 </style>

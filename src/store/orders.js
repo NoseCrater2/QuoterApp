@@ -6,6 +6,7 @@ const orders = {
     savedOrders: [],
     quotingOrder: {},
     quotedOrder: {},
+    matrix: [],
     order: {
       manufacturer: null,
       type: null,
@@ -27,6 +28,9 @@ const orders = {
       cloth_holder: false,
       extraEnrollable: 0,
       extraVertical: 0,
+      installmentCharge: 0,
+      base_price: 0,
+      count_same_blinds: 1,
       motor: {
         height_control: null,
         side_control: null,
@@ -65,8 +69,11 @@ const orders = {
           parseFloat(order.motor.flexiballetPrice) +
           parseFloat(order.motor.galleryPrice) +
           parseFloat(order.motor.manufacturerPrice) +
-          parseFloat(order.motor.stringPrice)
-          pt = prices += pt
+          parseFloat(order.motor.stringPrice) +
+          parseFloat(order.extraEnrollable) +
+          parseFloat(order.extraVertical) +
+          parseFloat(order.installmentCharge)
+          pt = prices += ((order.count_same_blinds > 0 ? order.count_same_blinds : 1) * pt)
           return pt
         })
       }
@@ -90,23 +97,11 @@ const orders = {
     },
 
     getterVigentQuotings (state) {
-      return state.blinds.filter(itemOrder => {
-        let order
-        if (itemOrder.state === true) {
-          order = itemOrder
-        }
-        return order
-      })
+      return state.blinds.filter(itemOrder => itemOrder.state === true)
     },
 
     getterNoVigentQuotings (state) {
-      return state.blinds.filter(itemOrder => {
-        let order
-        if (itemOrder.state === false) {
-          order = itemOrder
-        }
-        return order
-      })
+      return state.blinds.filter(itemOrder => itemOrder.state === false)
     }
 
   },
@@ -170,6 +165,10 @@ const orders = {
       const u = state.savedOrders.find(order => order.id === deleteOrder.id)
       state.savedOrders.splice(state.savedOrders.indexOf(u), 1)
       state.quotedOrder = JSON.parse(JSON.stringify(Object.assign(state.quotedOrder, {})))
+    },
+
+    setMatrix (state, matrix) {
+      state.matrix = matrix
     }
   },
 
@@ -240,9 +239,9 @@ const orders = {
       data.orders = state.orders
       data.is_quotation = true
       try {
-        const response = await api
+        await api
           .post('/api/orders', data)
-        commit('setQuotingOrders', response.data.data)
+        // commit('setQuotingOrders', response.data.data)
       } catch (error) {}
     },
 
@@ -251,10 +250,9 @@ const orders = {
       data.orders = state.orders
       data.is_quotation = false
       try {
-        const response = await api
+        await api
           .post('/api/orders', data)
         // commit('setQuotedOrders', response.data.data)
-        console.log(response)
       } catch (error) {}
     },
 
@@ -305,6 +303,15 @@ const orders = {
           .delete('/api/orders/' + id)
         commit('deleteQuoted', response.data.data)
       } catch (error) {}
+    },
+
+    getMatrix: async function ({ commit }, file) {
+      try {
+        const response = await api.get('/api/' + file)
+        commit('setMatrix', response.data)
+      } catch (error) {
+
+      }
     }
   }
 }
