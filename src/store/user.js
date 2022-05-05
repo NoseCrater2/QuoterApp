@@ -33,7 +33,8 @@ const user = {
         api.defaults.headers.common.Authorization = 'Bearer ' + response.data
         commit('setToken', response.data)
       } catch (error) {
-        commit('setErrors', error.response.data.errors)
+        console.log(error.response)
+        commit('setErrors', error.response)
       }
     },
     getUser: async function ({ commit, state }) {

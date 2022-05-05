@@ -40,7 +40,7 @@
           v-if="order.type === 'PANEL JAPONES'">Panel Japones Manual</div>
           <div >Persiana Manual</div>
         </q-toolbar-title>
-         <q-btn v-if="$route.name != 'Home'" flat round dense icon="calculate" />
+         <q-btn v-if="$route.name != 'Home'" flat round dense :icon="$route.meta.icon" />
       </q-toolbar>
     </q-header>
 

@@ -48,7 +48,7 @@
                   <div v-if="o.second_color != null">SKU: {{ o.second_color.code }} </div>
                    <q-item-label lines="1" class="q-mt-xs text-body2 text-weight-bold text-primary text-uppercase">
                       <span>
-                        ${{o.base_price}} MXN
+                        ${{o.price}} MXN
                       </span>
                     </q-item-label>
                 </div>
@@ -58,7 +58,7 @@
                 <q-img
                   class="rounded-borders"
                   width="80px"
-                  :src="`https://rollux.com.mx/img/modelos/medium/${o.type}/${o.manufacturer}/${o.color.code}.jpg`"
+                  :src="`https://rollux.com.mx/img/modelos/medium/${o.type}/${$store.getters.getVariant(o.variant, o.type).line.slug}/${o.color.code}.jpg`"
                 >
                   <template v-slot:error>
                     <q-img
@@ -105,9 +105,9 @@
             <q-item-label style="padding-left: 15px">MEDIDAS</q-item-label>
             <q-chip dense v-for="(c, index) in o.canvas" :key="index">
               <q-avatar color="black" text-color="white"> {{index + 1}} </q-avatar>
-              Alto: {{c.height}}m
+              Alto: {{c.height.toFixed(3)}}m
               <q-separator class="q-mx-sm" vertical></q-separator>
-              Ancho: {{c.width}}m
+              Ancho: {{c.width.toFixed(3)}}m
             </q-chip>
             <q-card-section >
               <div class="text-overline">{{o.motor.drive}}</div>
@@ -220,7 +220,7 @@
                    {{$store.getters.getMotor(o.motor.motor).system}}
                   </q-item-label>
                   <q-item-label lines="1" class="q-mt-xs text-body2 text-weight-bold text-primary text-uppercase">
-                    <span>{{$store.getters.getMotor(o.motor.motor).price}}</span>
+                    <span>{{o.motor.price}}</span>
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -386,6 +386,12 @@
                 <q-icon color="primary" name="person"/>
               </q-item-section>
                <q-item-section>Imprimir como distribuidor</q-item-section>
+               <q-inner-loading :showing="loadingPDF">
+                  <q-spinner-puff
+                  color="primary"
+                  size="2em"
+                  />
+                </q-inner-loading>
             </q-item>
             <q-item clickable @click="showClientForm = true">
               <q-item-section avatar>
@@ -398,6 +404,12 @@
                 <q-icon color="primary" name="print"/>
               </q-item-section>
                <q-item-section>Imprimir sin distribuidor</q-item-section>
+               <q-inner-loading :showing="loadingBasicPDF">
+                  <q-spinner-puff
+                  color="primary"
+                  size="2em"
+                  />
+                </q-inner-loading>
             </q-item>
           </q-list>
         </q-card-section>
@@ -434,7 +446,7 @@
          <q-card-actions>
           <q-btn flat label="CANCELAR" color="red" @click="pdfOptionsDialog = false; showClientForm = false" v-close-popup />
           <q-space></q-space>
-          <q-btn flat v-if="showClientForm" label="ACEPTAR" @click="validateClient()" color="primary" />
+          <q-btn flat v-if="showClientForm" label="ACEPTAR" @click="validateClient()" color="primary" :loading="loadingClientPdf"/>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -443,7 +455,7 @@
         <q-btn color="grey-9"  icon="add" @click="newOrdersDialog = true" />
         <q-btn color="grey-9"  icon="save" @click="saveBlinds()" :loading="loadingBlinds" />
         <q-btn color="grey-9"  icon="add_shopping_cart" @click="saveAsOrder()" :loading="loadingOrders" />
-        <q-btn color="grey-9"  icon="picture_as_pdf" @click="pdfOptionsDialog = true" :loading="loadingPDF" /> <!-- @click="downloadPDF()" -->
+        <q-btn color="grey-9"  icon="picture_as_pdf" @click="pdfOptionsDialog = true" /> <!-- @click="downloadPDF()" -->
       </q-btn-group>
     </q-footer>
   </q-page>
@@ -454,6 +466,8 @@ import { mapState } from 'vuex'
 export default {
   data () {
     return {
+      loadingClientPdf: false,
+      loadingBasicPDF: false,
       showClientForm: false,
       client: {
         name: null,
@@ -500,6 +514,7 @@ export default {
 
   methods: {
     downloadBasicPdf () {
+      this.loadingBasicPDF = true
       api.post('/api/order-list-pdf', this.$store.state.orders.orders, { responseType: 'blob' }).then((response) => {
         const blob = new Blob([response.data])
         if (typeof cordova !== 'undefined') {
@@ -516,17 +531,20 @@ export default {
             message: 'Debes iniciar sesión desde un celular.'
           })
         }
+        this.loadingBasicPDF = false
       }).catch(error => {
         console.log(error)
         this.$q.notify({
           type: 'negative',
           message: 'No se pudo descargar el pdf!'
         })
+        this.loadingBasicPDF = false
       })
     },
     validateClient () {
       this.$refs.clientform.validate().then(success => {
         if (success) {
+          this.loadingClientPdf = true
           this.client.id = this.user.id
           api.post('/api/auth-order-list-pdf-distributor', { orders: this.$store.state.orders.orders, user: this.client }, { responseType: 'blob' }).then((response) => {
             const blob = new Blob([response.data])
@@ -544,6 +562,7 @@ export default {
                 message: 'Debes iniciar sesión desde un celular.'
               })
             }
+            this.loadingClientPdf = false
             this.client = Object.assign(this.defaultClient, {})
             this.pdfOptionsDialog = false
             this.showClientForm = false
@@ -551,6 +570,7 @@ export default {
             this.client = Object.assign(this.defaultClient, {})
             this.pdfOptionsDialog = false
             this.showClientForm = false
+            this.loadingClientPdf = false
             console.log(error)
             this.$q.notify({
               type: 'negative',
@@ -602,8 +622,9 @@ export default {
       this.loadingOrders = true
       this.$store.dispatch('saveOrders').then(() => {
         this.$store.dispatch('deleteOrders')
+        this.$store.dispatch('getQuotedOrders')
         this.loadingOrders = true
-        this.$router.replace({ name: 'Orders' })
+        this.$router.replace({ name: 'Cart' })
       })
     },
     async downloadPDF () {

@@ -4,6 +4,7 @@ import products from './products'
 import orders from './orders'
 import motorization from './motorization'
 import user from './user'
+import cart from './cart'
 
 // import example from './module-example'
 
@@ -24,7 +25,8 @@ export default function (/* { ssrContext } */) {
       products,
       orders,
       motorization,
-      user
+      user,
+      cart
     },
 
     // enable strict mode (adds overhead!)

@@ -3,28 +3,28 @@
     <q-card flat  style="width: 100%; background-color: #404042; border-radius: 0 0 15px 15px; max-height: 380px" >
       <q-item  style="height: 100%">
         <q-item-section >
-          <q-item-label class="text-white text-h5 montserrat-bold">¡Hola!</q-item-label>
+          <q-item-label class="text-white text-h5 montserrat-bold">{{$t('greeting')}}</q-item-label>
           <q-item-label class="text-primary" style="font-size: 1.8em">{{ user.name + ' ' + user.last_name }}</q-item-label>
           <q-item-label class="text-white montserrat-light">{{ user.email }}</q-item-label>
         </q-item-section>
         <q-item-section side>
           <q-avatar size="100px" color="primary" text-color="white">
            <div class="montserrat-bold" style="margin-top: 30px; font-size:0.7em">{{user.discount_percent}}%</div>
-           <div style="font-size: 10px; margin-top: -10px">Descuento</div>
+           <div style="font-size: 10px; margin-top: -10px">{{$t('discount')}}</div>
           </q-avatar>
         </q-item-section>
       </q-item>
     </q-card>
     <q-list class="q-px-sm" padding style="width: 100%">
-      <q-item-label class="text-center montserrat-bold text-h6 text-dark" header >¿Qué deseas hacer?</q-item-label>
+      <q-item-label class="text-center montserrat-bold text-h6 text-dark" header >{{$t('presentation')}}</q-item-label>
       <q-card bordered  style="background-color: #339999; height: 110px">
         <q-item to="quoter" style="height: 100%; padding: 0 16px 0 0">
           <q-item-section>
             <img src="img/calculadora.png" style="height: 110px;width: 120px;" >
         </q-item-section>
         <q-item-section side>
-          <q-item-label class="montserrat-bold text-white" style="font-size: 25px">COTIZAR</q-item-label>
-          <q-item-label class="montserrat-light text-white" >Cotizador de persianas</q-item-label>
+          <q-item-label class="montserrat-bold text-white" style="font-size: 25px">{{$t('quot')}}</q-item-label>
+          <q-item-label class="montserrat-light text-white" >{{$t('quot_description')}}</q-item-label>
         </q-item-section>
         </q-item>
       </q-card>
@@ -36,8 +36,8 @@
                 <img src="img/cotizaciones.png" style="height: 60px;width: 60px;" >
               </q-item-section>
               <q-item-section side>
-                <q-item-label class="montserrat-bold text-white" style="font-size: 15px">{{$store.getters.totalOrders}} COTIZACIONES</q-item-label>
-                <q-item-label class="montserrat-light text-white" style="font-size: 11px; text-align: end" >Ver tus persianas cotizadas</q-item-label>
+                <q-item-label class="montserrat-bold text-white" style="font-size: 15px">{{$store.getters.totalOrders +' '+ $t('count_quotations')}}</q-item-label>
+                <q-item-label class="montserrat-light text-white" style="font-size: 11px; text-align: end" >{{$t('count_quotations_description')}}</q-item-label>
               </q-item-section>
             </q-item>
           </q-card>
@@ -47,8 +47,8 @@
                 <img src="img/ordenes.png" style="height: 60px;width: 60px;" >
               </q-item-section>
               <q-item-section side>
-                <q-item-label class="montserrat-bold text-white" style="font-size: 15px">{{$store.getters.totalSavedorders}} ÓRDENES</q-item-label>
-                <q-item-label class="montserrat-light text-white" style="font-size: 12px; text-align: end" >Ver tus persianas pagadas</q-item-label>
+                <q-item-label class="montserrat-bold text-white" style="font-size: 15px">{{$store.getters.totalSavedorders + ' ' + $t('count_orders')}}</q-item-label>
+                <q-item-label class="montserrat-light text-white" style="font-size: 12px; text-align: end" >{{$t('count_orders_description')}}</q-item-label>
               </q-item-section>
             </q-item>
           </q-card>
@@ -60,8 +60,8 @@
                 <img src="img/carrito.png" style="height: 130px;width: 130px;" >
               </q-item-section>
               <q-item-section side>
-                <q-item-label class="montserrat-bold text-white" style="font-size: 20px">0 CARRITO</q-item-label>
-                <q-item-label class="montserrat-light text-white" style="font-size: 12px;  text-align: end">Ver persianas por pagar</q-item-label>
+                <q-item-label class="montserrat-bold text-white" style="font-size: 20px">{{$store.getters.totalMarketcarOrders+' '+$t('count_cart')}}</q-item-label>
+                <q-item-label class="montserrat-light text-white" style="font-size: 12px;  text-align: end">{{$t('count_cart_description')}}</q-item-label>
               </q-item-section>
             </q-item>
           </q-card>
@@ -114,8 +114,8 @@ export default {
         //   count: this.$store.getters.totalOrders
         // },
         {
-          title: 'Ver persianas guardadas',
-          description: 'Ve tus persianas que dejaste para despúes',
+          title: this.$t('list_title_saved_blinds'),
+          description: this.$t('list_subtitle_saved_blinds'),
           route: 'saved-blinds',
           icon: 'img/guardar.png',
           count: this.$store.getters.getterVigentQuotings.length
@@ -135,20 +135,20 @@ export default {
         //   count: this.$store.getters.totalMarketcarOrders
         // },
         {
-          title: 'Lista de precios',
-          description: 'Persianas compradas',
+          title: this.$t('list_title_prices'),
+          description: this.$t('list_subtitle_prices'),
           route: 'price-list',
           icon: 'img/pdf.png'
         },
         {
-          title: 'Catálogos digitales',
-          description: 'Persianas listas para comprar',
+          title: this.$t('list_title_catalogs'),
+          description: this.$t('list_subtitle_catalogs'),
           route: 'catalogs',
           icon: 'img/catalogo.png'
         },
         {
-          title: 'Perfil de Usuario',
-          description: 'Tus datos personales y de envío',
+          title: this.$t('list_title_profile'),
+          description: this.$t('list_subtitle_profile'),
           route: 'profile',
           icon: 'img/perfil.png'
         }

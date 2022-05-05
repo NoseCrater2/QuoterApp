@@ -8,19 +8,19 @@
           v-if="order.type == 'horizontal-madera-2'"
           class="montserrat-bold"
           style="font-size: 1em !important;line-height: normal; color: #47a5ad" >
-          {{ mxCurrencyFormat.format(findWoodPrice * order.count_same_blinds) }} MXN
+          {{ mxCurrencyFormat.format(roundToOneDecimal(findWoodPrice * order.count_same_blinds)) }} MXN
           </p>
           <p
           v-if="order.type == 'celular'"
           class="montserrat-bold"
           style="font-size: 1em !important;line-height: normal; color: #47a5ad" >
-            {{mxCurrencyFormat.format(findCelularPrice * order.count_same_blinds)}} MXN
+            {{mxCurrencyFormat.format(roundToOneDecimal(findCelularPrice * order.count_same_blinds))}} MXN
           </p>
           <p
           class="montserrat-bold"
           v-else
           style="font-size: 1em !important;line-height: normal; color: #47a5ad" >
-           {{ mxCurrencyFormat.format((unitaryPrice * order.count_same_blinds) + parseFloat(extraEnrollablePrice) + parseFloat(extraVerticalPrice)) }} MXN
+           {{ mxCurrencyFormat.format( roundToOneDecimal(unitaryPrice * order.count_same_blinds) + parseFloat(extraEnrollablePrice) + parseFloat(extraVerticalPrice)) }} MXN
           </p>
         </q-card-section>
         <q-separator  inset style="height: 70px" dark vertical />
@@ -342,9 +342,10 @@
       prefix="8"
       :done="step > 8"
       >
+        <q-input rounded outlined dense v-model.number="order.installmentCharge" prefix="$" label="Cargo por instalación"></q-input>
         <q-stepper-navigation class="flex justify-center">
            <q-btn class="arrows" @click="step = 7" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
-          <q-btn label="TERMINAR PERSIANA" @click="addBlind()" size="sm" color="orange"></q-btn>
+          <q-btn label="TERMINAR PERSIANA" @click="addBlind()" size="sm" color="primary"></q-btn>
         </q-stepper-navigation>
       </q-step>
       </div>
@@ -710,9 +711,10 @@
         title="Últimas opciones"
         prefix="8"
         :done="step > 8">
+        <q-input rounded outlined dense v-model.number="order.installmentCharge" prefix="$" label="Cargo por instalación"></q-input>
           <q-stepper-navigation class="flex">
             <q-btn class="arrows" @click="step = 7" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
-            <q-btn label="TERMINAR PERSIANA" @click="addBlind()" size="sm" color="orange"></q-btn>
+            <q-btn label="TERMINAR PERSIANA" @click="addBlind()" size="sm" color="primary"></q-btn>
           </q-stepper-navigation>
         </q-step>
         <q-step
@@ -770,9 +772,10 @@
         title="Últimas opciones"
         prefix="9"
         :done="step > 9">
+        <q-input rounded outlined dense v-model.number="order.installmentCharge" prefix="$" label="Cargo por instalación"></q-input>
           <q-stepper-navigation class="flex">
             <q-btn class="arrows" @click="step = 8" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
-            <q-btn label="TERMINAR PERSIANA" @click="addBlind()" size="sm" color="orange"></q-btn>
+            <q-btn label="TERMINAR PERSIANA" @click="addBlind()" size="sm" color="primary"></q-btn>
           </q-stepper-navigation>
         </q-step>
         <q-step
@@ -976,7 +979,7 @@
         <q-step
         v-if="order.celular_drive === 'Muelle'"
         :name="6"
-        :title="'Seleccione Medidas'"
+        :title="'Selecciona Medidas'"
         prefix="6"
         :done="step > 6">
           <q-form ref="sizecelularform">
@@ -1025,7 +1028,7 @@
         <q-step
         v-if="order.celular_drive === 'Muelle'"
         :name="7"
-        :title="'Selecciona Marco'"
+        :title="'Seleccione Marco'"
         :caption="order.motor.frame != null ? `${order.motor.frame}` : ''"
         prefix="7"
         :done="step > 7">
@@ -1047,9 +1050,10 @@
         title="Últimas opciones"
         prefix="8"
         :done="step > 8">
+        <q-input rounded outlined dense v-model.number="order.installmentCharge" prefix="$" label="Cargo por instalación"></q-input>
           <q-stepper-navigation class="flex">
             <q-btn class="arrows" @click="step = 7" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
-            <q-btn label="TERMINAR PERSIANA"  @click="addBlind()" size="sm" color="orange"></q-btn>
+            <q-btn label="TERMINAR PERSIANA"  @click="addBlind()" size="sm" color="primary"></q-btn>
           </q-stepper-navigation>
         </q-step>
       </div>
@@ -1356,7 +1360,7 @@
         <q-stepper-navigation class="flex">
           <q-btn @click="motorTypeBack" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
 
-          <q-btn @click="addBlind()" color="orange" :label="finishTitle" flat size="sm" rounded></q-btn>
+          <q-btn @click="addBlind()" color="primary" :label="finishTitle" flat size="sm" rounded></q-btn>
         </q-stepper-navigation>
       </q-step>
       </div>
@@ -1365,6 +1369,7 @@
        <q-toolbar>
           <img width="64px" src="statics/img/white-r.png" />
           <q-toolbar-title style="font-size: 16px">TOTAL: {{mxCurrencyFormat.format($store.getters.totalPrice) }} MXN</q-toolbar-title>
+          <q-btn round outline :label="$store.getters.totalOrders" to="quoted-blinds"></q-btn>
         </q-toolbar>
     </q-footer>
     <q-dialog v-model="canvasDialog" persistent transition-show="scale" transition-hide="scale">
@@ -1728,6 +1733,9 @@ export default {
   },
   name: 'PageIndex',
   methods: {
+    roundToOneDecimal (value) {
+      return Math.round(value * 10) / 10
+    },
     findCelularPrices () {
       if (this.order.celular_variant != null) {
         console.log()
@@ -1744,7 +1752,6 @@ export default {
           }
         })
       } else if (this.order.variant != null) {
-        console.log('entro aaqui')
         this.celularPosibilities.forEach(file => {
           if (this.order.celular_type === file.t && (this.order.celular_drive === file.d || file.d === undefined) && this.order.variant.includes(file.v)) {
             this.$store.dispatch('getMatrix', file.name).then(res => {
@@ -1783,21 +1790,23 @@ export default {
     },
     addBlind () {
       if (this.order.type === 'horizontal-madera-2') {
-        this.order.price = this.findWoodPrice
+        this.order.price = this.roundToOneDecimal(this.findWoodPrice)
         if (!isNaN(this.findWoodPrice)) {
-          this.order.base_price = this.findWoodPrice
+          this.order.base_price = this.roundToOneDecimal(this.findWoodPrice)
         }
         this.order.base_price = this.order.price
       } else if (this.order.type === 'celular') {
-        this.order.price = this.findCelularPrice
-        this.order.motor.price = this.motorCelularPrice()
+        this.order.price = this.roundToOneDecimal(this.findCelularPrice)
+        this.order.motor.price = this.roundToOneDecimal(this.motorCelularPrice())
         this.order.base_price = this.order.price
       } else if (this.order.type === 'vertical') {
         this.order.extraVertical = this.extraVerticalPrice
-        this.order.price = this.unitaryPrice
+        this.order.price = this.roundToOneDecimal(this.unitaryPrice)
+        this.order.base_price = this.variant.price
       } else {
         this.order.extraEnrollable = this.extraEnrollablePrice * 1
-        this.order.price = this.unitaryPrice
+        this.order.price = this.roundToOneDecimal(this.unitaryPrice)
+        this.order.base_price = this.variant.price
       }
 
       this.$store.dispatch('addToOrder', this.order).then(() => {

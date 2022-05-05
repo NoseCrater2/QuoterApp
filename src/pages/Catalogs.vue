@@ -8,13 +8,17 @@
           <q-icon name="clear" v-show="search != null" @click="search = null" />
         </template>
      </q-input>
-     <q-separator class="q-my-sm"></q-separator>
+      <q-item-label header class="text-center q-py-sm">
+        Seleccione una lista para descargarla en pdf
+      </q-item-label>
+      <q-separator ></q-separator>
     <q-pull-to-refresh  @refresh="refresh" :style="`max-height:${maxHeight}px; overflow: scroll`">
       <q-card class="q-ma-sm" flat bordered v-for="item in filteredPrices" :key="item.id">
-        <q-item @click="download(item.id)" active clickable>
+        <q-item @click="download(item.id, item.path)" active clickable>
           <q-item-section avatar>
             <q-avatar square>
               <img :src="`https://rollux.com.mx/img/${item.thumbnail}`">
+              <q-badge  floating color="teal">pdf</q-badge>
             </q-avatar>
           </q-item-section>
           <q-item-section>
@@ -60,15 +64,31 @@ export default {
       done()
     },
 
-    download (id) {
+    download (id, link) {
       this.selected = id
-      setTimeout(() => {
+      axios.get('https://rollux.com.mx/img/' + link, { responseType: 'blob' }).then((response) => {
+        const blob = new Blob([response.data])
+        if (typeof cordova !== 'undefined') {
+          this.saveBlob2File('lista.pdf', blob)
+          this.$q.notify({
+            type: 'positive',
+            message: 'Pdf guardado en descargas!'
+          })
+        } else {
+          this.$q.notify({
+            type: 'warning',
+            message: 'Debes iniciar sesión desde un celular.'
+          })
+        }
+        this.selected = 0
+      }).catch(error => {
+        console.log(error)
         this.$q.notify({
-          type: 'positive',
-          message: 'Pdf guardado en descargas!'
+          type: 'negative',
+          message: 'No se pudo descargar el pdf!'
         })
         this.selected = 0
-      }, 2000)
+      })
     },
 
     loadData () {
@@ -78,6 +98,24 @@ export default {
       }).catch(error => {
         this.loading = false
         console.log(error)
+      })
+    },
+    createFile (dirEntry, fileName, blob) {
+      dirEntry.getFile(fileName, { create: true, exclusive: false }, fileEntry => {
+        this.writeFile(fileEntry, blob)
+      }, error => {
+        console.log(error)
+      })
+    },
+
+    writeFile (fileEntry, dataObj) {
+      fileEntry.createWriter(fileWriter => {
+        fileWriter.onwriteend = () => {
+        }
+        fileWriter.onerror = error => {
+          console.log(error)
+        }
+        fileWriter.write(dataObj)
       })
     }
   },
@@ -90,7 +128,7 @@ export default {
       return this.prices
     },
     maxHeight () {
-      return (this.$q.screen.height - 125)
+      return (this.$q.screen.height - 157)
     }
   }
 }

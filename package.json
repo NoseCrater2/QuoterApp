@@ -1,6 +1,6 @@
 {
   "name": "quoterapp",
-  "version": "0.0.1",
+  "version": "0.0.6",
   "description": "Cotizador de persianas",
   "productName": "Rollux Cotizador",
   "author": "Angel <anarqueabrn@gmail.com>",
@@ -15,7 +15,8 @@
     "core-js": "^3.6.5",
     "joi": "^17.4.0",
     "js-file-download": "^0.4.12",
-    "quasar": "^1.0.0"
+    "quasar": "^1.0.0",
+    "vue-i18n": "^8.27.1"
   },
   "devDependencies": {
     "@quasar/app": "^2.0.0",

@@ -30,7 +30,7 @@
                     </q-item-section>
                     <q-item-section side>
                         <q-badge v-if="item.state == 'No Pagada'" color="black" :label="item.state" />
-                        <q-badge v-if="item.state == 'En Verificación'" color="yellow" :label="item.state" />
+                        <q-badge v-if="item.state == 'En Verificacion'" style="color: black" color="yellow" :label="item.state" />
                         <q-badge v-if="item.state == 'Recibida'" color="gray" :label="item.state" />
                         <q-badge v-if="item.state == 'En produccion'" color="orange" :label="item.state" />
                         <q-badge v-if="item.state == 'Paqueteria'" color="blue" :label="item.state" />
