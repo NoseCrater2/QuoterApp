@@ -10,7 +10,7 @@ const routes = [
       { path: 'quoted-blinds', name: 'Quoted', component: () => import('pages/QuotedBlinds.vue'), meta: { title: 'Persianas cotizadas', icon: 'calculte' } },
       { path: 'saved-blinds', name: 'Saved', component: () => import('pages/SavedBlinds.vue'), meta: { title: 'Persianas guardadas' } },
       { path: 'details-saved-blinds', name: 'DetailsSavedBlinds', component: () => import('src/pages/DetailsSavedBlinds.vue'), props: true, meta: { title: 'Detalles Persianas', icon: 'calculte' } },
-      { path: 'orders', name: 'Orders', component: () => import('pages/Orders.vue'), meta: { title: 'Ordenes', icon: 'calculte' } },
+      { path: 'orders', name: 'Orders', component: () => import('pages/Orders.vue'), meta: { title: 'Órdenes', icon: 'calculte' } },
       { path: 'details-orders', name: 'DetailsOrders', component: () => import('src/pages/DetailsOrders.vue'), props: true, meta: { title: 'Detalles Persianas', icon: 'calculte' } },
       { path: 'marketcar', name: 'Marketcar', component: () => import('pages/Marketcar.vue'), meta: { title: 'Carrito' } },
       { path: 'details-marketcar', name: 'DetailsMarketcar', component: () => import('src/pages/DetailsMarketcar.vue'), props: true, meta: { title: 'Detalles Persianas', icon: 'calculte' } },
@@ -20,6 +20,7 @@ const routes = [
       { path: 'catalogs', name: 'Catalogs', component: () => import('pages/Catalogs.vue'), props: true, meta: { title: 'Catálogos', icon: 'calculte' } },
       { path: 'cart-home', name: 'Cart', component: () => import('pages/CartHome.vue'), props: true, meta: { title: 'Carrito de compra', icon: 'shopping_cart' } },
       { path: 'success-spei-payment', name: 'SuccessSpeiPayment', component: () => import('pages/SuccessSpeiPayment.vue'), props: true, meta: { title: 'Pago éxitoso por SPEI', icon: 'shopping_cart' } },
+      { path: 'success-netpay-payment', name: 'SuccessNetpayPayment', component: () => import('pages/SuccessNetPayPayment.vue'), props: true, meta: { title: 'Pago éxitoso por NetPay', icon: 'shopping_cart' } },
       { path: 'netpay-home', name: 'NetPay', component: () => import('pages/NetPayHome.vue'), props: true, meta: { title: 'Pago con NetPay', icon: 'shopping_cart' } }
     ]
   },

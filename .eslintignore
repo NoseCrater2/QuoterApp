@@ -4,5 +4,5 @@
 /src-cordova
 /.quasar
 /node_modules
-
+/src/utils/netpay.min.js
 .eslintrc.js

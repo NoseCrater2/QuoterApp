@@ -29,6 +29,13 @@
         <q-item-section>
           <q-item-label>{{item.title}}</q-item-label>
           <q-item-label caption>+{{mxCurrencyFormat.format(selectedOrder.total * item.plus)}}</q-item-label>
+          <q-item-label
+          v-if="total < 600 && item.schema == 'Crédito'"
+          caption
+          class="text-red"
+          style="font-size: 0.7em">
+          NetPay no permite pagar a crédito cantidades menores a $600 MXN
+          </q-item-label>
         </q-item-section>
          <q-item-section top side>
             <q-item-label caption>{{item.schema}}</q-item-label>
@@ -36,7 +43,7 @@
         </q-item-section>
       </q-item>
     </q-list>
-    <div class="bg-white rounded-borders bordered q-mt-md" v-if="selectedSchema === 'Crédito'" style="height: 200px" >
+    <div class="bg-white rounded-borders bordered q-mt-md" v-if="selectedSchema === 'Crédito' && total >= 600" style="height: 200px" >
       <div class="bg-primary text-h6 text-center text-white">Tus tarjetas de {{selectedSchema}}</div>
       <q-list separator>
         <q-slide-item clickable v-ripple v-for="card in creditCards" :key="card.card.lastFourDigits" left-color="red" @left="onLeft">
@@ -353,7 +360,14 @@ export default {
         }
       ).then(async (response) => {
         if (response.status === 200) {
-          this.$router.replace({ name: 'SuccessSpeiPayment', params: { id: this.selectedOrder.id } })
+          const details = {
+            total: this.total,
+            order: this.selectedOrder.order,
+            card: this.selectedCard.card.lastFourDigits,
+            brand: this.selectedCard.card.brand,
+            email: this.user.email
+          }
+          this.$router.replace({ name: 'SuccessNetpayPayment', params: { details } })
           this.$store.dispatch('removePaymentOrder')
           this.$store.dispatch('removeSelectedType')
           this.$store.dispatch('getQuotedOrders')
