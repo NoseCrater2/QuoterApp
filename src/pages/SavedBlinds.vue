@@ -1,24 +1,28 @@
 <template>
   <q-page class="bg-grey-2">
-    <div class="q-pa-md">
-      <div class="q-gutter-y-md">
         <q-tabs
+        class="bg-grey-9 q-pb-md"
+        style="border-radius: 0px 0px 15px 15px;"
         v-model="tab"
-        dense
-        active-color="primary"
-        indicator-color="primary"
+        active-color="white"
         align="justify"
         narrow-indicator
         mobile-arrows>
-          <q-tab name="current" icon="" :label="`Actuales (${getterVigentQuotings.length})`"></q-tab>
-          <q-tab name="old" icon="" :label="`Anteriores (${getterNoVigentQuotings.length})`"></q-tab>
+          <q-tab name="current" :label="`Actuales`">
+             <q-badge color="red" floating>{{getterVigentQuotings.length}}</q-badge>
+          </q-tab>
+          <q-separator vertical dark class="q-mt-md"></q-separator>
+          <q-tab name="old"  :label="`Anteriores`">
+             <q-badge color="red" floating>{{getterNoVigentQuotings.length}}</q-badge>
+          </q-tab>
         </q-tabs>
-        <q-tab-panels v-model="tab" animated>
-          <q-tab-panel name="current" style="margin: 0; padding: 0;">
-            <div v-if="getterVigentQuotings.length > 0">
-              <q-card bordered flat v-for="(item ,index) in getterVigentQuotings" :key="index">
+        <q-tab-panels v-model="tab" animated class="bg-grey-2">
+          <q-tab-panel name="current" class="q-pa-sm" >
+             <q-item-label header class="text-center bg-grey-2 q-px-none">Selecciona una cotización para ver sus detalles</q-item-label>
+            <div v-if="getterVigentQuotings.length > 0" :style="`max-height:${maxHeight}px; overflow: scroll`">
+              <q-list flat v-for="(item ,index) in getterVigentQuotings" :key="index">
                 <itemQuotation :item="item"></itemQuotation>
-              </q-card>
+              </q-list>
             </div>
             <div v-else class="absolute-center text-grey-7" style="text-align: center" >
               <p  >No hay persianas cotizadas</p>
@@ -53,8 +57,6 @@
             </div>
           </q-tab-panel>
         </q-tab-panels>
-      </div>
-    </div>
       <q-inner-loading
         :showing="loadingQuotations"
         color="teal"
@@ -83,7 +85,10 @@ export default {
     ...mapState({
       blinds: (state) => state.orders.blinds
     }),
-    ...mapGetters(['getterVigentQuotings', 'getterNoVigentQuotings'])
+    ...mapGetters(['getterVigentQuotings', 'getterNoVigentQuotings']),
+    maxHeight () {
+      return (this.$q.screen.height - 198)
+    }
   },
 
   components: {

@@ -42,6 +42,9 @@
             </template>
           </q-input>
           </q-card-section>
+          <!-- <q-card-section>
+            errores {{errors}}
+          </q-card-section> -->
           <q-card-section>
              <q-btn outline rounded color="white" class="full-width q-mt-sm" @click="login" label="iniciar sesión" />
           </q-card-section>

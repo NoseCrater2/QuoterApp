@@ -145,9 +145,6 @@
     </q-footer>
     <q-dialog persistent full-width transition-show="slide-up" transition-hide="slide-down" v-model="showAddCardDialog">
       <q-card class="bg-grey-3">
-        <!-- <q-card-actions align="right">
-          <q-btn icon="close" round flat @click="showAddCardDialog = false" />
-        </q-card-actions> -->
         <q-card style="height: 200px; border-radius: 10px" class="bg-blue-9 q-ma-md">
           <q-card-section class="q-px-none" >
              <div class="q-px-lg bg-blue-grey-10 text-h6 text-white">Nueva tarjeta</div>

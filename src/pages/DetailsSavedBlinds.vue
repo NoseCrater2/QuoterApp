@@ -14,6 +14,10 @@
               <q-btn flat color="red" round icon="delete_forever" @click="openRemoveOneBlindDialog(o.id)" :disable="(quotingOrder.blinds.length < 2) == true ? true : false">
               </q-btn>
               <q-space></q-space>
+                <span class="montserrat-bold text-primary">
+                  #{{quotingOrder.order}}
+                </span>
+              <q-space></q-space>
               <q-btn flat color="teal-3" round icon="edit" @click="openEditDialog(o.id)">
               </q-btn>
             </q-card-actions>
@@ -634,20 +638,30 @@ export default {
           await this.$store.dispatch('getQuotedOrders')
           await this.$store.dispatch('getQuotingOrders')
           this.closeSaveAsOrderDialog()
-          this.$router.push({ name: 'Marketcar' })
+          this.$router.push({ name: 'Cart' })
         })
       }
     },
 
     async downloadPDF () {
       this.loadingPDF = true
-      console.log(this.quotingOrder)
-      console.log(this.user)
       await api.post('/api/auth-order-list-pdf-distributor', { orders: this.quotingOrder.blinds, user: this.user }, { responseType: 'blob' }).then((response) => {
         const blob = new Blob([response.data])
         if (typeof cordova !== 'undefined') {
-          this.saveBlob2File('modelos.pdf', blob)
+          const currenDate = new Date()
+          const formattedDate = currenDate.getFullYear() + '' + (currenDate.getMonth() + 1) + '' + currenDate.getDate() + '' + currenDate.getHours() + '' + currenDate.getMinutes() + '' + currenDate.getSeconds()
+          this.saveBlob2File(`${this.quotingOrder.order}-${formattedDate}.pdf`, blob)
+          this.$q.notify({
+            type: 'positive',
+            message: 'Pdf guardado en descargas!'
+          })
+        } else {
+          this.$q.notify({
+            type: 'warning',
+            message: 'Debes iniciar sesión desde un celular.'
+          })
         }
+        this.loadingPDF = false
       })
     },
     saveBlob2File (fileName, blob) {

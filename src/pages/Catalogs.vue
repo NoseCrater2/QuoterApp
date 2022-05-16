@@ -10,11 +10,12 @@
      </q-input>
       <q-item-label header class="text-center q-py-sm">
         Seleccione una lista para descargarla en pdf
+        {{errors}}
       </q-item-label>
       <q-separator ></q-separator>
     <q-pull-to-refresh  @refresh="refresh" :style="`max-height:${maxHeight}px; overflow: scroll`">
       <q-card class="q-ma-sm" flat bordered v-for="item in filteredPrices" :key="item.id">
-        <q-item @click="download(item.id, item.path)" active clickable>
+        <q-item @click="download(item.id, item.title)" active clickable>
           <q-item-section avatar>
             <q-avatar square>
               <img :src="`https://rollux.com.mx/img/${item.thumbnail}`">
@@ -47,6 +48,7 @@ import axios from 'axios'
 export default {
   data () {
     return {
+      errors: null,
       selected: 0,
       loading: true,
       prices: [],
@@ -57,6 +59,7 @@ export default {
 
   created () {
     this.loadData()
+    // this.download(1, 'pdfs/archivos/0UIiYwLS0VeOFjjptOU4hVG8w8ucoAXOy5NHT4WJ.pdf')
   },
   methods: {
     refresh (done) {
@@ -64,12 +67,12 @@ export default {
       done()
     },
 
-    download (id, link) {
+    download (id, title) {
       this.selected = id
-      axios.get('https://rollux.com.mx/img/' + link, { responseType: 'blob' }).then((response) => {
+      axios.get('https://rollux.com.mx/api/download-catalogs/' + id, { responseType: 'blob' }).then((response) => {
         const blob = new Blob([response.data])
         if (typeof cordova !== 'undefined') {
-          this.saveBlob2File('lista.pdf', blob)
+          this.saveBlob2File(title + '.pdf', blob)
           this.$q.notify({
             type: 'positive',
             message: 'Pdf guardado en descargas!'
@@ -82,17 +85,25 @@ export default {
         }
         this.selected = 0
       }).catch(error => {
-        console.log(error)
+        this.errors = error
+        // console.log(error)
         this.$q.notify({
           type: 'negative',
-          message: 'No se pudo descargar el pdf!'
+          message: error
         })
         this.selected = 0
       })
     },
-
+    saveBlob2File (fileName, blob) {
+      const folder = cordova.file.externalRootDirectory + 'Download'
+      window.resolveLocalFileSystemURL(folder, dirEntry => {
+        this.createFile(dirEntry, fileName, blob)
+      }, error => {
+        this.message = 'saveBlob2File ' + error
+      })
+    },
     loadData () {
-      axios.get('https://rollux.com.mx/api/catalogs').then(response => {
+      this.$api.get('/api/catalogs').then(response => {
         this.prices = response.data
         this.loading = false
       }).catch(error => {

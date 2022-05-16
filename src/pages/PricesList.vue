@@ -14,7 +14,7 @@
      <q-separator ></q-separator>
     <q-pull-to-refresh  @refresh="refresh" :style="`max-height:${maxHeight}px; overflow: scroll`">
       <q-card class="q-ma-sm" flat bordered v-for="item in filteredPrices" :key="item.id">
-        <q-item @click="download(item.id, item.path)" active clickable>
+        <q-item @click="download(item.id, item.title)" active clickable>
           <q-item-section avatar>
             <q-avatar square>
               <img :src="`https://rollux.com.mx/img/${item.thumbnail}`">
@@ -66,12 +66,12 @@ export default {
       done()
     },
 
-    download (id, link) {
+    download (id, title) {
       this.selected = id
-      axios.get('https://rollux.com.mx/img/' + link, { responseType: 'blob' }).then((response) => {
+      axios.get('https://rollux.com.mx/api/download-prices/' + id, { responseType: 'blob' }).then((response) => {
         const blob = new Blob([response.data])
         if (typeof cordova !== 'undefined') {
-          this.saveBlob2File('lista.pdf', blob)
+          this.saveBlob2File(title + '.pdf', blob)
           this.$q.notify({
             type: 'positive',
             message: 'Pdf guardado en descargas!'

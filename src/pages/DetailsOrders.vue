@@ -361,8 +361,6 @@ export default {
 
     async downloadPDF () {
       this.loadingPDF = true
-      console.log(this.quotedOrder)
-      console.log(this.user)
       await api.post('/api/auth-order-list-pdf-distributor', { orders: this.quotedOrder.blinds, user: this.user }, { responseType: 'blob' }).then((response) => {
         const blob = new Blob([response.data])
         if (typeof cordova !== 'undefined') {
