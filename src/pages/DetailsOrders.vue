@@ -320,6 +320,7 @@
     <q-footer v-if="loaded">
       <q-btn-group spread outline>
         <q-btn color="grey-9"  icon="picture_as_pdf" @click="downloadPDF()" :loading="loadingPDF" :disable="loadingPDF" />
+        <!-- <button @click="clickkk()">Share PDF</button> -->
       </q-btn-group>
     </q-footer>
   </q-page>
@@ -342,6 +343,12 @@ export default {
       controlExpanse: false,
       mxCurrencyFormat: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }),
       tab: 'tab1'
+      // options: {
+      //   message: 'share this app', // not supported on some apps (Facebook, Instagram)
+      //   files: ['', ''], // an array of filenames either locally or remotely
+      //   url: 'https://www.npmjs.com/package/cordova-plugin-x-socialsharing#3-installation',
+      //   chooserTitle: 'Pick an app' // Android only, you can override the default share sheet title
+      // }
     }
   },
 
@@ -353,6 +360,20 @@ export default {
   },
 
   methods: {
+
+    // onSuccess (result) {
+    //   console.log('Share completed? ' + result.completed) // On Android apps mostly return false even while it's true
+    //   console.log('Shared to app: ' + result.app) // On Android result.app since plugin version 5.4.0 this is no longer empty. On iOS it's empty when sharing is cancelled (result.completed=false)
+    // },
+
+    // onError (msg) {
+    //   console.log('Sharing failed with message: ' + msg)
+    // },
+
+    // clickkk () {
+    //   window.plugins.socialsharing.shareWithOptions(this.options, this.onSuccess, this.onError)
+    // },
+
     loadCurrentQuoting () {
       this.$store.dispatch('getQuotedOrder', this.item.id).then(() => {
         this.loaded = true

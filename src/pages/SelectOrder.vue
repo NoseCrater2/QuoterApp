@@ -38,27 +38,41 @@
           <div class="text-teal text-h6 text-center">ÓRDEN {{ selectedId }}</div>
         </q-card-section>
         <q-list separator class="q-px-md" bordered>
-          <q-item clickable >
+          <q-item clickable @click="viewOrderDetails()">
             <q-item-section avatar>
               <q-icon name="info" color="warning"></q-icon>
             </q-item-section>
             <q-item-section>Ver detalles</q-item-section>
           </q-item>
-          <q-item clickable >
+          <q-item clickable @click="openMakeOrderToQuoting()" >
             <q-item-section avatar>
               <q-icon name="remove_circle" color="negative"></q-icon>
             </q-item-section>
             <q-item-section>Cancelar órden</q-item-section>
           </q-item>
-          <q-item clickable >
+          <!-- <q-item clickable >
             <q-item-section avatar>
               <q-icon name="shopping_cart" color="positive"></q-icon>
             </q-item-section>
             <q-item-section>Revisar y pagar</q-item-section>
-          </q-item>
+          </q-item> -->
         </q-list>
         <q-card-actions align="right" class="bg-white text-teal">
           <q-btn flat label="cancelar" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+    <q-dialog v-model="makeOrderToQuotingConfirmDialog" persistent transition-show="scale" transition-hide="scale">
+      <q-card class="bg-teal-4 text-white" style="width: 300px">
+        <q-card-section class="flex justify-center">
+          <div class="text-h6">¿Regresar orden al menú de cotizaciones?</div>
+        </q-card-section>
+        <q-card-actions align="right" class="bg-white text-teal">
+          <q-btn flat label="CANCELAR" @click="closeMakeOrderToQuoting()" :disable="isMakeOrderToQuoting" v-close-popup />
+          <q-space></q-space>
+          <q-separator vertical></q-separator>
+          <q-space></q-space>
+          <q-btn flat label="ACEPTAR" @click="makeOrderToQuoting()" :loading="isMakeOrderToQuoting" :disable="isMakeOrderToQuoting" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -72,8 +86,11 @@ export default {
     return {
       objectOrderSelected: null,
       selectedId: 0,
+      selectedOrder: null,
       optionsDialog: false,
       selected: 0,
+      isMakeOrderToQuoting: false,
+      makeOrderToQuotingConfirmDialog: false,
       mxCurrencyFormat: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
     }
   },
@@ -88,21 +105,59 @@ export default {
   },
   methods: {
     showOptions ({ evt, ...info }) {
-      // console.log(evt)
       this.selectedId = evt.path[2].id
-      this.optionsDialog = true
+      this.selectedOrder = this.orders.find(o => o.id === parseInt(evt.path[2].id))
+      if (this.selectedId > 0) {
+        this.optionsDialog = true
+      }
     },
 
     selectOrder (id) {
       if (this.selectedId === id) {
         this.selectedId = 0
+        this.selectedOrder = null
         this.$store.dispatch('removePaymentOrder')
       } else {
         this.selectedId = id
+        this.selectedOrder = this.orders.find(o => o.id === id)
         this.$store.dispatch('setPaymentOrder', this.orders.find(o => o.id === id))
       }
+    },
+
+    viewOrderDetails () {
+      if (this.selectedOrder != null) {
+        console.log(this.selectedOrder)
+        this.$router.push({ name: 'DetailsOrders', params: { item: this.selectedOrder } })
+      }
+    },
+
+    openMakeOrderToQuoting () {
+      this.makeOrderToQuotingConfirmDialog = true
+    },
+
+    closeMakeOrderToQuoting () {
+      this.isMakeOrderToQuoting = false
+      this.makeOrderToQuotingConfirmDialog = false
+    },
+
+    makeOrderToQuoting () {
+      if (this.selectedId > 0) {
+        this.isMakeOrderToQuoting = true
+        this.$store.dispatch('removeOrderMarketcar', this.selectedId).then(async () => {
+          await this.$store.dispatch('getQuotedOrders')
+          await this.$store.dispatch('getQuotingOrders')
+          this.optionsDialog = false
+          this.closeMakeOrderToQuoting()
+          // this.$router.push({ name: 'Quoted' })
+        })
+      }
+    },
+
+    checkAndaPay () {
+
     }
   }
+
 }
 </script>
 

@@ -161,6 +161,26 @@
         <q-card-section class="q-pt-none">
          <q-item-label header class="text-center q-px-none q-pt-none">Agregar o quitar tarjetas</q-item-label>
           <q-list separator>
+            <q-slide-item clickable v-ripple v-for="card in debitCards" :key="card.card.lastFourDigits" left-color="red" @left="onLeft">
+               <template v-slot:left>
+                <div class="row items-center bg-red">
+                  <q-btn flat class="full-width" icon="delete" label="Eliminar" @click="openDeleteCardDialog(card.source)" />
+                </div>
+              </template>
+              <q-item >
+              <q-item-section avatar>
+                <q-avatar rounded>
+                  <img :src="`https://rollux.com.mx/img/payments/${card.card.brand}.svg`">
+                </q-avatar>
+              </q-item-section>
+              <q-item-section>
+                  <q-item-label>{{card.card.cardPrefix}}  ** **** {{card.card.lastFourDigits}}</q-item-label>
+                  <q-item-label caption>EXP: {{card.card.expMonth}}/{{card.card.expYear}} {{card.card.scheme == 'debit' ? '(DEBITO)' : '(CRÉDITO)' }}</q-item-label>
+              </q-item-section>
+              </q-item>
+            </q-slide-item>
+          </q-list>
+          <q-list separator>
             <q-slide-item clickable v-ripple v-for="card in creditCards" :key="card.card.lastFourDigits" left-color="red" @left="onLeft">
                <template v-slot:left>
                 <div class="row items-center bg-red">
@@ -175,7 +195,7 @@
               </q-item-section>
               <q-item-section>
                   <q-item-label>{{card.card.cardPrefix}}  ** **** {{card.card.lastFourDigits}}</q-item-label>
-                  <q-item-label caption>EXP: {{card.card.expMonth}}/{{card.card.expYear}}</q-item-label>
+                  <q-item-label caption>EXP: {{card.card.expMonth}}/{{card.card.expYear}} {{card.card.scheme == 'debit' ? '(DEBITO)' : '(CRÉDITO)' }}</q-item-label>
               </q-item-section>
               </q-item>
             </q-slide-item>
@@ -255,16 +275,36 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+    <q-dialog v-model="showDeleteCardDialog" full-width>
+      <q-card>
+        <q-card-section class="flex justify-between">
+          ¿Quitar esta tarjeta?
+          <q-icon size="30px" color="red" name="delete"></q-icon>
+        </q-card-section>
+        <q-card-actions align="between">
+          <q-btn flat label="cancelar" @click="showDeleteCardDialog = false" />
+           <q-btn flat label="aceptar" color="red" :loading="isDeletingCard" @click="deleteCard()" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
 <script>
+import NetPay from '../utils/netpay.min.js'
+// import NetPay from '../utils/netpay.154.js'
 import { mapState } from 'vuex'
+import { api } from 'boot/axios'
 export default {
   data () {
     return {
+      isSavingCard: false,
+      isDeletingCard: false,
+      showAddCardDialog: false,
       showConfigureNetPayDialog: false,
+      showDeleteCardDialog: false,
       selectType: null,
+      selectedToken: null,
       toSelectTypes: [],
       loadingPaymentTypes: false,
       toSavedTypes: null,
@@ -309,6 +349,10 @@ export default {
     }
   },
   created () {
+    NetPay.setApiKey('pk_netpay_ohojJOrTFRIteqjzFOoGXncEx') // PRODUCCION
+    // NetPay.setApiKey('pk_netpay_RjQdVseiQQZsCtAXVmoMoXnVq') // SANDBOX
+    // NetPay.setSandboxMode(true) // SANDBOX
+
     this.$store.dispatch('getPaymentTypes', this.user.id)
     if (this.toSelectTypes.length === 0) {
       this.loadingPaymentTypes = true
@@ -321,6 +365,86 @@ export default {
     this.chargeCards()
   },
   methods: {
+    generalValidate () {
+      this.isSavingCard = true
+      NetPay.token.create(this.cardInformation, this.success, this.error)
+    },
+    error (e) {
+      console.log(e)
+      this.isSavingCard = false
+      this.$q.notify({
+        type: 'negative',
+        message: e.message
+      })
+    },
+    success (e) {
+      const cardObject = JSON.parse(e.message.data)
+      // DEBIT CARD
+      // let cardInformation = {
+      //     cardNumber: "5499490519982367",
+      //     expMonth: "04",
+      //     expYear: "25",
+      //     cvv2: "999",
+      // };
+      // CREDIT CARD
+      // let cardInformation = {
+      //     cardNumber: "4918717162313532",
+      //     expMonth: "04",
+      //     expYear: "25",
+      //     cvv2: "999",
+      // };
+      // let cardObject = JSON.parse(e.message.data)
+      if (this.user.netpayClientId != null) {
+        console.log('GUARDAR NUEVO Tarjeta ' + this.user.id)
+        console.log('GUARDAR NUEVO Tarjeta ' + cardObject.token)
+        console.log('GUARDAR NUEVO Tarjeta ' + this.cardInformation.cvv2)
+        api.post('/api/netpay-add-card/' + this.user.id,
+          { token: cardObject.token, cvv2: this.cardInformation.cvv2 }
+        ).then((response) => {
+          if (response.status === 200) {
+            this.showAddCardDialog = false
+            this.chargeCards()
+          } else {
+            this.$q.notify({ type: 'negative', message: 'Ocurrió un error, inténtelo después' })
+          }
+          this.isSavingCard = false
+        }).catch(() => {
+          this.isSavingCard = false
+          this.$q.notify({ type: 'negative', message: 'Ocurrió un error, inténtelo después' })
+        })
+      } else {
+        // console.log('GUARDAR NUEVO CLIENTE')
+        api.post('/api/netpay-save/' + this.user.id, { token: cardObject.token }).then((response) => {
+          if (response.status === 200) {
+            console.log('ya')
+            console.log(response)
+            this.isSavingCard = false
+            this.showAddCardDialog = false
+            this.chargeCards()
+            this.$q.notify({ type: 'positive', message: 'Se agregó la tarjeta con éxito' })
+          } else {
+            this.isSavingCard = false
+            this.$q.notify({ type: 'negative', message: 'Ocurrió un error, inténtelo después' })
+          }
+        })
+      }
+    },
+    openDeleteCardDialog (token) {
+      this.selectedToken = token
+      this.showDeleteCardDialog = true
+    },
+    deleteCard () {
+      this.isDeletingCard = true
+      api.post('/api/netpay-delete-card/' + this.user.id, { token: this.selectedToken }).then((response) => {
+        if (response.status === 200) {
+          this.chargeCards()
+        } else {
+          this.$q.notify({ type: 'negative', message: 'Ocurrió un error, inténtelo después' })
+        }
+        this.isDeletingCard = false
+        this.showDeleteCardDialog = false
+      })
+    },
     onRejected (rejectedEntries) {
       this.$q.notify({
         type: 'negative',

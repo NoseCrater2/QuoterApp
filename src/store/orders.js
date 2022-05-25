@@ -97,7 +97,7 @@ const orders = {
     },
 
     getterVigentQuotings (state) {
-      return state.blinds.filter(itemOrder => itemOrder.state === true)
+      return state.blinds.filter(itemOrder => itemOrder.state === true).length
     },
 
     getterNoVigentQuotings (state) {

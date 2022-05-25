@@ -287,9 +287,9 @@ export default {
     })
   },
   created () {
-    // NetPay.setApiKey('pk_netpay_ohojJOrTFRIteqjzFOoGXncEx') // PRODUCCION
-    NetPay.setApiKey('pk_netpay_RjQdVseiQQZsCtAXVmoMoXnVq') // SANDBOX
-    NetPay.setSandboxMode(true) // SANDBOX
+    NetPay.setApiKey('pk_netpay_ohojJOrTFRIteqjzFOoGXncEx') // PRODUCCION
+    // NetPay.setApiKey('pk_netpay_RjQdVseiQQZsCtAXVmoMoXnVq') // SANDBOX
+    // NetPay.setSandboxMode(true) // SANDBOX
 
     if (this.user.netpayClientId != null) {
       this.chargeCards()
