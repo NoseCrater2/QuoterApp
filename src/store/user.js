@@ -37,6 +37,18 @@ const user = {
         commit('setErrors', error.response)
       }
     },
+    logout: async function ({ commit }) {
+      try {
+        const response = await api
+          .get('/api/close-all-sessions')
+        if (response.status === 200) {
+          LocalStorage.remove('token')
+        }
+      } catch (error) {
+        LocalStorage.remove('token')
+        commit('setErrors', error.response)
+      }
+    },
     getUser: async function ({ commit, state }) {
       try {
         const response = await api

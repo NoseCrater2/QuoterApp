@@ -9,8 +9,9 @@
         </q-item-section>
         <q-item-section side>
           <q-avatar size="100px" color="primary" text-color="white">
-           <div class="montserrat-bold" style="margin-top: 30px; font-size:0.7em">{{user.discount_percent}}%</div>
-           <div style="font-size: 10px; margin-top: -10px">{{$t('discount')}}</div>
+             <img style="height: 110px; width: 145px; margin-right: -10px;" src="statics/img/white-r.png">
+           <!-- <div class="montserrat-bold" style="margin-top: 30px; font-size:0.7em">{{user.discount_percent}}%</div>
+           <div style="font-size: 10px; margin-top: -10px">{{$t('discount')}}</div> -->
           </q-avatar>
         </q-item-section>
       </q-item>
@@ -89,9 +90,35 @@
              <q-icon size="25px" color="primary" name="play_arrow" />
            </q-item-section>
         </q-item>
+        <q-item clickable @click="logoutDialog = true">
+          <q-item-section avatar>
+             <q-icon size="25px" color="primary" name="logout" />
+           </q-item-section>
+          <q-item-section >
+            <q-item-label class="montserrat-light" >Cerrar sesión</q-item-label>
+          </q-item-section>
+           <q-item-section avatar>
+             <q-icon size="25px" color="primary" name="play_arrow" />
+           </q-item-section>
+        </q-item>
         </q-list>
       </q-card>
     </q-list>
+    <q-dialog full-width persistent v-model="logoutDialog">
+      <q-card>
+        <q-card-section class="bg-primary text-center text-h5 text-white">
+          ¿Cerrar sesión?
+        </q-card-section>
+        <q-card-section class="text-center text-grey-7">
+          Esta acción cerrará tu sesión en todos los dispositivos móviles donde hayas iniciado sesión.
+        </q-card-section>
+        <q-separator inset></q-separator>
+        <q-card-actions align="between">
+          <q-btn label="cancelar" flat color="red" @click="logoutDialog = false"></q-btn>
+          <q-btn label="aceptar" :loading="logoutLoading" flat color="primary" @click="logout()"></q-btn>
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 <script>
@@ -99,6 +126,8 @@ import { mapState } from 'vuex'
 export default {
   data () {
     return {
+      logoutDialog: false,
+      logoutLoading: false,
       options: [
         // {
         //   title: 'Cotizar',
@@ -159,6 +188,16 @@ export default {
     ...mapState({
       user: (state) => state.user.user
     })
+  },
+
+  methods: {
+    logout () {
+      this.logoutLoading = true
+      this.$store.dispatch('logout').then(() => {
+        this.logoutLoading = false
+        this.$router.replace({ name: 'Login' })
+      })
+    }
   }
 }
 </script>

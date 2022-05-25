@@ -5,4 +5,6 @@
 /.quasar
 /node_modules
 /src/utils/netpay.min.js
+/src/utils/netpay-prod.min.js
+/src/utils/netpay.154.js
 .eslintrc.js

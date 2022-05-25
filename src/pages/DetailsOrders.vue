@@ -320,7 +320,6 @@
     <q-footer v-if="loaded">
       <q-btn-group spread outline>
         <q-btn color="grey-9"  icon="picture_as_pdf" @click="downloadPDF()" :loading="loadingPDF" :disable="loadingPDF" />
-        <!-- <button @click="clickkk()">Share PDF</button> -->
       </q-btn-group>
     </q-footer>
   </q-page>
@@ -360,20 +359,6 @@ export default {
   },
 
   methods: {
-
-    // onSuccess (result) {
-    //   console.log('Share completed? ' + result.completed) // On Android apps mostly return false even while it's true
-    //   console.log('Shared to app: ' + result.app) // On Android result.app since plugin version 5.4.0 this is no longer empty. On iOS it's empty when sharing is cancelled (result.completed=false)
-    // },
-
-    // onError (msg) {
-    //   console.log('Sharing failed with message: ' + msg)
-    // },
-
-    // clickkk () {
-    //   window.plugins.socialsharing.shareWithOptions(this.options, this.onSuccess, this.onError)
-    // },
-
     loadCurrentQuoting () {
       this.$store.dispatch('getQuotedOrder', this.item.id).then(() => {
         this.loaded = true
@@ -386,6 +371,12 @@ export default {
         const blob = new Blob([response.data])
         if (typeof cordova !== 'undefined') {
           this.saveBlob2File('modelos.pdf', blob)
+          const currenDate = new Date()
+          const formattedDate = currenDate.getFullYear() + '' + (currenDate.getMonth() + 1) + '' + currenDate.getDate() + '' + currenDate.getHours() + '' + currenDate.getMinutes() + '' + currenDate.getSeconds()
+          const title = `${this.quotedOrder.order}-${formattedDate}.pdf`
+          this.saveBlob2File(title, blob)
+          const path = cordova.file.externalRootDirectory + 'Download/' + title
+          this.shareDialog(title, path)
         }
       })
     },

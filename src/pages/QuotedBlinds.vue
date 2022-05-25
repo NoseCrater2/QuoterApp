@@ -385,7 +385,7 @@
               <q-item-section avatar>
                 <q-icon color="primary" name="person"/>
               </q-item-section>
-               <q-item-section>Imprimir como distribuidor</q-item-section>
+               <q-item-section>Compartir como distribuidor</q-item-section>
                <q-inner-loading :showing="loadingPDF">
                   <q-spinner-puff
                   color="primary"
@@ -397,13 +397,13 @@
               <q-item-section avatar>
                 <q-icon color="primary" name="group"/>
               </q-item-section>
-               <q-item-section>Imprimir para cliente</q-item-section>
+               <q-item-section>Compartir para cliente</q-item-section>
             </q-item>
             <q-item clickable @click="downloadBasicPdf()">
               <q-item-section avatar>
                 <q-icon color="primary" name="print"/>
               </q-item-section>
-               <q-item-section>Imprimir sin distribuidor</q-item-section>
+               <q-item-section>Compartir sin distribuidor</q-item-section>
                <q-inner-loading :showing="loadingBasicPDF">
                   <q-spinner-puff
                   color="primary"
@@ -414,7 +414,7 @@
           </q-list>
         </q-card-section>
         <q-card-section v-if="showClientForm">
-          <q-item-label header class="text-center">Imprimir para un cliente</q-item-label>
+          <q-item-label header class="text-center">Compartir para un cliente</q-item-label>
           <q-form ref="clientform">
             <q-input v-model="client.name" dense label="Nombre" :rules="[val => !!val ]" hide-bottom-space>
               <template v-slot:prepend><q-icon name="face" /></template>
@@ -455,7 +455,7 @@
         <q-btn color="grey-9"  icon="add" @click="newOrdersDialog = true" />
         <q-btn color="grey-9"  icon="save" @click="saveBlinds()" :loading="loadingBlinds" />
         <q-btn color="grey-9"  icon="add_shopping_cart" @click="saveAsOrder()" :loading="loadingOrders" />
-        <q-btn color="grey-9"  icon="picture_as_pdf" @click="pdfOptionsDialog = true" /> <!-- @click="downloadPDF()" -->
+        <q-btn color="grey-9"  icon="share" @click="pdfOptionsDialog = true" /> <!-- @click="downloadPDF()" -->
       </q-btn-group>
     </q-footer>
   </q-page>
@@ -511,8 +511,26 @@ export default {
       user: (state) => state.user.user
     })
   },
-
   methods: {
+    shareDialog (message, pathFile) {
+      const options = {
+        message: message, // not supported on some apps (Facebook, Instagram)
+        subject: 'the subject', // fi. for email
+        files: [pathFile], // an array of filenames either locally or remotely cordova.file.externalRootDirectory + 'Download' + '/Tejidos KTN.pdf'
+        // url: 'https://www.website.com/foo/#bar?a=b',
+        chooserTitle: 'Selecciona una aplicación para compartir' // Android only, you can override the default share sheet title
+        // appPackageName: 'com.apple.social.facebook' // Android only, you can provide id of the App you want to share with
+        // iPadCoordinates: '0,0,0,0' // IOS only iPadCoordinates for where the popover should be point.  Format with x,y,width,height
+      }
+      window.plugins.socialsharing.shareWithOptions(options, this.onSuccess, this.onError)
+    },
+    onSuccess (result) {
+      console.log('Share completed? ' + result.completed) // On Android apps mostly return false even while it's true
+      console.log('Shared to app: ' + result.app) // On Android result.app since plugin version 5.4.0 this is no longer empty. On iOS it's empty when sharing is cancelled (result.completed=false)
+    },
+    onError  (msg) {
+      console.log('Sharing failed with message: ' + msg)
+    },
     downloadBasicPdf () {
       this.loadingBasicPDF = true
       api.post('/api/order-list-pdf', this.$store.state.orders.orders, { responseType: 'blob' }).then((response) => {
@@ -520,11 +538,14 @@ export default {
         if (typeof cordova !== 'undefined') {
           const currenDate = new Date()
           const formattedDate = currenDate.getFullYear() + '' + (currenDate.getMonth() + 1) + '' + currenDate.getDate() + '' + currenDate.getHours() + '' + currenDate.getMinutes() + '' + currenDate.getSeconds()
-          this.saveBlob2File(`Cotización-${formattedDate}.pdf`, blob)
-          this.$q.notify({
-            type: 'positive',
-            message: 'Pdf guardado en descargas!'
-          })
+          const title = `Cotización-${formattedDate}.pdf`
+          this.saveBlob2File(title, blob)
+          const path = cordova.file.externalRootDirectory + 'Download/' + title
+          this.shareDialog(title, path)
+          // this.$q.notify({
+          //   type: 'positive',
+          //   message: 'Pdf guardado en descargas!'
+          // })
         } else {
           this.$q.notify({
             type: 'warning',
@@ -551,11 +572,10 @@ export default {
             if (typeof cordova !== 'undefined') {
               const currenDate = new Date()
               const formattedDate = currenDate.getFullYear() + '' + (currenDate.getMonth() + 1) + '' + currenDate.getDate() + '' + currenDate.getHours() + '' + currenDate.getMinutes() + '' + currenDate.getSeconds()
-              this.saveBlob2File(`Cotización-${formattedDate}.pdf`, blob)
-              this.$q.notify({
-                type: 'positive',
-                message: 'Pdf guardado en descargas!'
-              })
+              const title = `Cotización-${formattedDate}.pdf`
+              this.saveBlob2File(title, blob)
+              const path = cordova.file.externalRootDirectory + 'Download/' + title
+              this.shareDialog(title, path)
             } else {
               this.$q.notify({
                 type: 'warning',
@@ -634,11 +654,10 @@ export default {
         if (typeof cordova !== 'undefined') {
           const currenDate = new Date()
           const formattedDate = currenDate.getFullYear() + '' + (currenDate.getMonth() + 1) + '' + currenDate.getDate() + '' + currenDate.getHours() + '' + currenDate.getMinutes() + '' + currenDate.getSeconds()
-          this.saveBlob2File(`Cotización-${formattedDate}.pdf`, blob)
-          this.$q.notify({
-            type: 'positive',
-            message: 'Pdf guardado en descargas!'
-          })
+          const title = `Cotización-${formattedDate}.pdf`
+          this.saveBlob2File(title, blob)
+          const path = cordova.file.externalRootDirectory + 'Download/' + title
+          this.shareDialog(title, path)
         } else {
           this.$q.notify({
             type: 'warning',

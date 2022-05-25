@@ -401,7 +401,7 @@
     </q-dialog>
     <q-footer v-if="loaded">
       <q-btn-group v-if="quotingOrder.state" spread outline>
-        <q-btn color="grey-9"  icon="picture_as_pdf" @click="downloadPDF()" :loading="loadingPDF" :disable="loadingPDF" />
+        <q-btn color="grey-9"  icon="share" @click="downloadPDF()" :loading="loadingPDF" :disable="loadingPDF" />
         <q-btn color="grey-9"  icon="delete" @click="openRemoveDialog(item.id)" :loading="isRemovingQuoting" :disable="isRemovingQuoting" />
         <!-- <q-btn color="grey-9"  icon="edit" @click="openEditDialog(item.id)" :loading="isEditingQuoting" :disable="isEditingQuoting" /> -->
         <q-btn color="grey-9"  icon="add_shopping_cart" @click="openSaveAsOrderDialog(item.id)" :loading="isSavingAsOrder" :disable="isSavingAsOrder" />
@@ -643,6 +643,26 @@ export default {
       }
     },
 
+    shareDialog (message, pathFile) {
+      const options = {
+        message: message, // not supported on some apps (Facebook, Instagram)
+        subject: 'the subject', // fi. for email
+        files: [pathFile], // an array of filenames either locally or remotely cordova.file.externalRootDirectory + 'Download' + '/Tejidos KTN.pdf'
+        // url: 'https://www.website.com/foo/#bar?a=b',
+        chooserTitle: 'Selecciona una aplicación para compartir' // Android only, you can override the default share sheet title
+        // appPackageName: 'com.apple.social.facebook' // Android only, you can provide id of the App you want to share with
+        // iPadCoordinates: '0,0,0,0' // IOS only iPadCoordinates for where the popover should be point.  Format with x,y,width,height
+      }
+      window.plugins.socialsharing.shareWithOptions(options, this.onSuccess, this.onError)
+    },
+
+    onSuccess (result) {
+      console.log('Share completed? ' + result.completed) // On Android apps mostly return false even while it's true
+      console.log('Shared to app: ' + result.app) // On Android result.app since plugin version 5.4.0 this is no longer empty. On iOS it's empty when sharing is cancelled (result.completed=false)
+    },
+    onError  (msg) {
+      console.log('Sharing failed with message: ' + msg)
+    },
     async downloadPDF () {
       this.loadingPDF = true
       await api.post('/api/auth-order-list-pdf-distributor', { orders: this.quotingOrder.blinds, user: this.user }, { responseType: 'blob' }).then((response) => {
@@ -650,11 +670,10 @@ export default {
         if (typeof cordova !== 'undefined') {
           const currenDate = new Date()
           const formattedDate = currenDate.getFullYear() + '' + (currenDate.getMonth() + 1) + '' + currenDate.getDate() + '' + currenDate.getHours() + '' + currenDate.getMinutes() + '' + currenDate.getSeconds()
-          this.saveBlob2File(`${this.quotingOrder.order}-${formattedDate}.pdf`, blob)
-          this.$q.notify({
-            type: 'positive',
-            message: 'Pdf guardado en descargas!'
-          })
+          const title = `${this.quotingOrder.order}-${formattedDate}.pdf`
+          this.saveBlob2File(title, blob)
+          const path = cordova.file.externalRootDirectory + 'Download/' + title
+          this.shareDialog(title, path)
         } else {
           this.$q.notify({
             type: 'warning',
