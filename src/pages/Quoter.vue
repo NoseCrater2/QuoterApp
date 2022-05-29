@@ -345,7 +345,7 @@
         <q-input rounded outlined dense v-model.number="order.installmentCharge" prefix="$" label="Cargo por instalación"></q-input>
         <q-stepper-navigation class="flex justify-center">
            <q-btn class="arrows" @click="step = 7" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
-          <q-btn label="TERMINAR PERSIANA" @click="addBlind()" size="sm" color="primary"></q-btn>
+           <q-btn label="TERMINAR PERSIANA" @click="addBlind()" size="sm" color="primary"></q-btn>
         </q-stepper-navigation>
       </q-step>
       </div>
@@ -1359,10 +1359,11 @@
       </q-list>
         <q-stepper-navigation class="flex">
           <q-btn @click="motorTypeBack" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
-
-          <q-btn @click="addBlind()" color="primary" :label="finishTitle" flat size="sm" rounded></q-btn>
         </q-stepper-navigation>
       </q-step>
+      <div class="flex justify-center">
+        <q-btn @click="addBlind()" style="background: #D87C01; color: white" :label="finishTitle" unelevated rounded></q-btn>
+      </div>
       </div>
     </q-stepper>
     <q-footer>

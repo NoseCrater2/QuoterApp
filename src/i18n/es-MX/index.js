@@ -69,5 +69,4 @@ export default {
   title_choose_flex: 'Motorizar las persianas FLEXIBALET añadirá un costo extra de $25,500.00 MXN a la cotización.',
   button_title_canvas_1: 'Si tu ventana revasa los limites permitidos puedes agregar más lienzos',
   button_title_canvas_2: 'Máximo excedido'
-
 }
