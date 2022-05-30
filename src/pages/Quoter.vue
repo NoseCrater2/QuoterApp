@@ -1357,13 +1357,13 @@
           </q-item-section>
         </q-item>
       </q-list>
-        <q-stepper-navigation class="flex">
+        <q-stepper-navigation class="col-12">
           <q-btn @click="motorTypeBack" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
+          <div v-if="step >= endOrderBtn" class="flex justify-center q-mt-md">
+            <q-btn @click="addBlind()" style="background: #D87C01; color: white" :label="finishTitle" unelevated rounded></q-btn>
+          </div>
         </q-stepper-navigation>
       </q-step>
-      <div class="flex justify-center">
-        <q-btn @click="addBlind()" style="background: #D87C01; color: white" :label="finishTitle" unelevated rounded></q-btn>
-      </div>
       </div>
     </q-stepper>
     <q-footer>
@@ -2067,6 +2067,12 @@ export default {
       motorizations: (state) => state.motorization.motorizations,
       matrix: (state) => state.orders.matrix
     }),
+    endOrderBtn () {
+      if (this.order.type === 'sheer' || this.order.type === 'triple-shade-shangri-la' || this.order.type === 'romantic') {
+        return 5
+      }
+      return 4
+    },
     preSideControlTitle () {
       if (this.order.motor_type === 'Motorizado') {
         return 'Selecciona lado del motor'
