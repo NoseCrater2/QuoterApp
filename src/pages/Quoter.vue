@@ -154,6 +154,7 @@
         :done="step > 3"
         >
          <q-input rounded outlined dense v-model.number="order.installmentCharge" prefix="$" label="Cargo por instalación"></q-input>
+         <q-input rounded outlined dense v-model.number="order.count_same_blinds" prefix="$" label="Cantidad persianas este tipo (opcional)"></q-input>
           <q-option-group
           v-model="order.motor.drive"
           :options="motor_drive_options"
@@ -343,9 +344,23 @@
       :done="step > 8"
       >
         <q-input rounded outlined dense v-model.number="order.installmentCharge" prefix="$" label="Cargo por instalación"></q-input>
-        <q-stepper-navigation class="flex justify-center">
+                 <q-input rounded outlined dense v-model.number="order.count_same_blinds" prefix="$" label="Cantidad persianas este tipo (opcional)"></q-input>
+        <q-stepper-navigation class="col-12">
            <q-btn class="arrows" @click="step = 7" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
-           <q-btn label="TERMINAR PERSIANA" @click="addBlind()" size="sm" color="primary"></q-btn>
+            <q-card-section>
+              <q-input
+              rounded
+              outlined
+              input-style="max-height: 80px;"
+              type="textarea"
+              label="Comentarios"
+              dense
+              v-model="order.comment"
+              ></q-input>
+            </q-card-section>
+           <div class="flex justify-center q-mt-md">
+              <q-btn label="TERMINAR PERSIANA"  @click="addBlind()" style="background: #D87C01; color: white" unelevated rounded></q-btn>
+            </div>
         </q-stepper-navigation>
       </q-step>
       </div>
@@ -712,9 +727,23 @@
         prefix="8"
         :done="step > 8">
         <q-input rounded outlined dense v-model.number="order.installmentCharge" prefix="$" label="Cargo por instalación"></q-input>
-          <q-stepper-navigation class="flex">
+                 <q-input rounded outlined dense v-model.number="order.count_same_blinds" prefix="$" label="Cantidad persianas este tipo (opcional)"></q-input>
+          <q-stepper-navigation class="col-12">
             <q-btn class="arrows" @click="step = 7" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
-            <q-btn label="TERMINAR PERSIANA" @click="addBlind()" size="sm" color="primary"></q-btn>
+            <q-card-section>
+              <q-input
+              rounded
+              outlined
+              input-style="max-height: 80px;"
+              type="textarea"
+              label="Comentarios"
+              dense
+              v-model="order.comment"
+              ></q-input>
+            </q-card-section>
+            <div class="flex justify-center q-mt-md">
+              <q-btn label="TERMINAR PERSIANA"  @click="addBlind()" style="background: #D87C01; color: white" unelevated rounded></q-btn>
+            </div>
           </q-stepper-navigation>
         </q-step>
         <q-step
@@ -773,9 +802,23 @@
         prefix="9"
         :done="step > 9">
         <q-input rounded outlined dense v-model.number="order.installmentCharge" prefix="$" label="Cargo por instalación"></q-input>
-          <q-stepper-navigation class="flex">
+                 <q-input rounded outlined dense v-model.number="order.count_same_blinds" prefix="$" label="Cantidad persianas este tipo (opcional)"></q-input>
+          <q-stepper-navigation class="col-12">
             <q-btn class="arrows" @click="step = 8" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
-            <q-btn label="TERMINAR PERSIANA" @click="addBlind()" size="sm" color="primary"></q-btn>
+            <q-card-section>
+              <q-input
+              rounded
+              outlined
+              input-style="max-height: 80px;"
+              type="textarea"
+              label="Comentarios"
+              dense
+              v-model="order.comment"
+              ></q-input>
+            </q-card-section>
+            <div class="flex justify-center q-mt-md">
+              <q-btn label="TERMINAR PERSIANA"  @click="addBlind()" style="background: #D87C01; color: white" unelevated rounded></q-btn>
+            </div>
           </q-stepper-navigation>
         </q-step>
         <q-step
@@ -1051,9 +1094,23 @@
         prefix="8"
         :done="step > 8">
         <q-input rounded outlined dense v-model.number="order.installmentCharge" prefix="$" label="Cargo por instalación"></q-input>
-          <q-stepper-navigation class="flex">
+                 <q-input rounded outlined dense v-model.number="order.count_same_blinds" prefix="$" label="Cantidad persianas este tipo (opcional)"></q-input>
+          <q-stepper-navigation class="col-12">
             <q-btn class="arrows" @click="step = 7" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
-            <q-btn label="TERMINAR PERSIANA"  @click="addBlind()" size="sm" color="primary"></q-btn>
+            <q-card-section>
+              <q-input
+              rounded
+              outlined
+              input-style="max-height: 80px;"
+              type="textarea"
+              label="Comentarios"
+              dense
+              v-model="order.comment"
+              ></q-input>
+            </q-card-section>
+            <div class="flex justify-center q-mt-md">
+              <q-btn label="TERMINAR PERSIANA"  @click="addBlind()" style="background: #D87C01; color: white" unelevated rounded></q-btn>
+            </div>
           </q-stepper-navigation>
         </q-step>
       </div>
@@ -1343,6 +1400,7 @@
       :done="step > 6"
       >
       <q-input rounded outlined dense v-model.number="order.installmentCharge" prefix="$" label="Cargo por instalación"></q-input>
+               <q-input rounded outlined dense v-model.number="order.count_same_blinds" prefix="$" label="Cantidad persianas este tipo (opcional)"></q-input>
       <q-list separator>
         <q-item
         @click="checkDrive(option.value)"
@@ -1359,6 +1417,17 @@
       </q-list>
         <q-stepper-navigation class="col-12">
           <q-btn @click="motorTypeBack" color="primary" label="anterior" icon="arrow_back_ios" flat></q-btn>
+          <q-card-section>
+            <q-input
+            rounded
+            outlined
+            input-style="max-height: 80px;"
+            type="textarea"
+            label="Comentarios"
+            dense
+            v-model="order.comment"
+            ></q-input>
+          </q-card-section>
           <div v-if="step >= endOrderBtn" class="flex justify-center q-mt-md">
             <q-btn @click="addBlind()" style="background: #D87C01; color: white" :label="finishTitle" unelevated rounded></q-btn>
           </div>
@@ -1621,6 +1690,7 @@ export default {
         installmentCharge: 0,
         base_price: 0,
         count_same_blinds: 1 || 0,
+        comment: null,
         motor: {
           height_control: null,
           side_control: null,
@@ -1673,6 +1743,7 @@ export default {
         installmentCharge: 0,
         base_price: 0,
         count_same_blinds: 1,
+        comment: null,
         motor: {
           height_control: null,
           side_control: null,

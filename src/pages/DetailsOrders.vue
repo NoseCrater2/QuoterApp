@@ -27,9 +27,15 @@
                   <div>SKU: {{ o.color.code }} </div>
                   <div v-if="o.second_color != null">COLOR NOCHE: {{ o.second_color.color }} </div>
                   <div v-if="o.second_color != null">SKU: {{ o.second_color.code }} </div>
-                  <div>PRECIO BASE: {{mxCurrencyFormat.format(o.base_price)}} MXN</div>
+                  <div>PRECIO BASE (M<sup>2</sup>): {{mxCurrencyFormat.format(o.base_price)}} MXN</div>
+                  <!-- <div>M<sup>2</sup>: {{squareMeters(o.canvas[0].width, o.canvas[0].height)}}</div> -->
+                  <div>PRECIO NETO (M<sup>2</sup>): {{mxCurrencyFormat.format(o.price)}} MXN</div>
                   <div>DESCUENTO: {{quotedOrder.user.discount_percent}} %</div>
                   <div>PRECIO NETO CON DESCTO: {{mxCurrencyFormat.format(o.discount_price)}} MXN</div>
+                  <div v-if="o.installmentCharge > 0">CARGO DE INSTALACIÓN: {{mxCurrencyFormat.format(o.installmentCharge)}} MXN</div>
+                  <div class="text-negative" v-if="o.count_same_blinds > 1">
+                    CANTIDAD PERSIANAS ESTE TIPO: {{o.count_same_blinds}}
+                  </div>
                    <!-- <q-item-label lines="1" class="q-mt-xs text-body2 text-weight-bold text-primary text-uppercase">
                       <span>
                         PRECIO BASE: ${{$store.getters.getVariant(o.variant, o.type).price}} MXN
@@ -298,19 +304,47 @@
                 </q-item>
               </q-slide-transition>
             </q-card-section>
+            <q-card-section v-if="o.comment != null">
+              <q-item tag="label" >
+                <q-item-section side>
+                  <q-icon name="comment" color="primary"></q-icon>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>COMENTARIOS</q-item-label>
+                </q-item-section>
+                <q-item-section side top>
+                  <q-btn
+                  style="display: inline"
+                  color="grey"
+                  round
+                  flat
+                  dense
+                  :icon="commentExpanse ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"
+                  @click="commentExpanse = !commentExpanse"
+                  ></q-btn>
+                </q-item-section>
+              </q-item>
+              <q-slide-transition>
+                <q-item dense v-show="commentExpanse">
+                  <q-item-section top>
+                    <q-item-label>
+                      <span class="text-weight-medium"></span>
+                      <span class="text-grey-8"> {{o.comment}}</span>
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-slide-transition>
+            </q-card-section>
+            <q-separator></q-separator>
             <q-card-section v-if="message != null">
               {{message}}
             </q-card-section>
             <q-card-actions class="q-mt-xs text-body2 text-weight-bold text-primary text-uppercase">
               TOTAL:
               <q-space></q-space>
-              {{mxCurrencyFormat.format(
-                o.discount_price +
-                o.motor.price +
-                o.motor.flexiballetPrice +
-                o.motor.galleryPrice +
-                o.motor.manufacturerPrice +
-                o.motor.stringPrice
+              {{mxCurrencyFormat.format((o.count_same_blinds > 0 ? o.count_same_blinds : 1) *
+                                      (parseFloat(o.discount_price) +
+                                      parseFloat(o.installmentCharge))
               )}} MXN
             </q-card-actions>
           </q-card>
@@ -340,6 +374,7 @@ export default {
       galleryExpanse: false,
       motorExpanse: false,
       controlExpanse: false,
+      commentExpanse: false,
       mxCurrencyFormat: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }),
       tab: 'tab1'
       // options: {
@@ -363,6 +398,23 @@ export default {
       this.$store.dispatch('getQuotedOrder', this.item.id).then(() => {
         this.loaded = true
       })
+    },
+
+    squareMeters (width, height) {
+      let resultWidhtXHeight = 0
+      if (width < 1 && height < 1) {
+        resultWidhtXHeight = 1
+        return resultWidhtXHeight
+      } else if (width < 1) {
+        resultWidhtXHeight = 1 * height
+        return resultWidhtXHeight.toFixed(3)
+      } else if (height < 1) {
+        resultWidhtXHeight = 1 * width
+        return resultWidhtXHeight.toFixed(3)
+      } else {
+        resultWidhtXHeight = height * width
+        return resultWidhtXHeight.toFixed(3)
+      }
     },
 
     async downloadPDF () {

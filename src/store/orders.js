@@ -30,7 +30,9 @@ const orders = {
       extraVertical: 0,
       installmentCharge: 0,
       base_price: 0,
+      discount_price: 0,
       count_same_blinds: 1,
+      comment: null,
       motor: {
         height_control: null,
         side_control: null,

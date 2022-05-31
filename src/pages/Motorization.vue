@@ -325,7 +325,7 @@
           v-if="motor.gallery && (order.type != 'romana' && order.type != 'panel-japones' && order.type != 'sheer' && order.type != 'vertical' && order.type != 'horizontal-madera-2')"
           ></q-select>
         </q-card-section>
-        <q-card-section>
+        <!-- <q-card-section>
           <q-input
           rounded
           outlined
@@ -335,7 +335,7 @@
           dense
           v-model="motor.comment"
           ></q-input>
-        </q-card-section>
+        </q-card-section> -->
       </q-card>
       <q-footer class="bg-white text-teal">
         <q-separator></q-separator>
