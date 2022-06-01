@@ -355,6 +355,8 @@
               type="textarea"
               label="Comentarios"
               dense
+              counter
+              maxlength="280"
               v-model="order.comment"
               ></q-input>
             </q-card-section>
@@ -738,6 +740,8 @@
               type="textarea"
               label="Comentarios"
               dense
+              counter
+              maxlength="280"
               v-model="order.comment"
               ></q-input>
             </q-card-section>
@@ -813,6 +817,8 @@
               type="textarea"
               label="Comentarios"
               dense
+              counter
+              maxlength="280"
               v-model="order.comment"
               ></q-input>
             </q-card-section>
@@ -1105,6 +1111,8 @@
               type="textarea"
               label="Comentarios"
               dense
+              counter
+              maxlength="280"
               v-model="order.comment"
               ></q-input>
             </q-card-section>
@@ -1425,6 +1433,8 @@
             type="textarea"
             label="Comentarios"
             dense
+            counter
+            maxlength="280"
             v-model="order.comment"
             ></q-input>
           </q-card-section>
